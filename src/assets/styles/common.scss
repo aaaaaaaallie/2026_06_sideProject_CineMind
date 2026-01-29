@@ -1,0 +1,28 @@
+@use 'abstracts/variables.scss' as *;
+
+::selection {
+}
+
+* {
+    box-sizing: border-box;
+    &:focus {
+        outline-color: #000;
+    }
+}
+
+a {
+    color: #000;
+    text-decoration: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    color: #000;
+    font-family: $fontFamilyNotoSans;
+    font-weight: 600;
+    background: #fff;
+}

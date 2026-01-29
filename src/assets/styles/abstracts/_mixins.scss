@@ -1,0 +1,240 @@
+// Function
+@use 'variables' as *;
+@function unit($value) {
+    @return ($value / 2) + px;
+    // @return ($value / 2);
+}
+
+@function compute($value) {
+    @return calc(#{unit($value)} * var(--ratio));
+}
+
+@function vw($value) {
+    $value: calc(100 * $value / $rwdS);
+    @return $value + vw; // 單位可改 vmin 或 vw
+}
+
+@function vmin($value) {
+    $value: calc(100 * $value / $rwdS);
+    @return $value + vmin;
+}
+
+@function vwM($value) {
+    $value: calc(100 * $value / $rwdM);
+    @return $value + vw;
+}
+
+@function vwL($value) {
+    $value: calc(100 * $value / $rwdL);
+    @return $value + vw;
+}
+
+@function vwX($value) {
+    $value: calc(100 * $value / $rwdX);
+    @return $value + vw;
+}
+
+@function vwXL($value) {
+    $value: calc(100 * $value / $rwdXL);
+    @return $value + vw;
+}
+
+@function vh($value) {
+    $value: calc(100 * $value / (700 + 0));
+    @return $value + vh;
+}
+
+@function vhX($value) {
+    $value: calc(100 * $value / (1080 + 0));
+    @return $value + vh;
+}
+
+@function lineHeight($fontSize, $lineHeight) {
+    $value: calc($lineHeight / $fontSize);
+    @return $value;
+}
+
+@function letterSpacing($value, $fontSize) {
+    $value: calc(($value * $fontSize) / 1000);
+    @return $value;
+}
+
+// Mixin
+
+@mixin hover {
+    
+    @media (hover: hover) and (min-width: #{$rwdS + 1}px) {
+        @content;
+    }
+
+}
+
+@mixin desktop {
+
+    @media (min-width: #{$rwdM + 1}px) {
+        @content;
+    }
+    
+}
+
+@mixin tablet {
+
+    @media (max-width: $tablet) {
+        @content;
+    }
+    
+}
+
+@mixin mobile {
+
+    @media (max-width: $mobile) {
+        @content;
+    }
+    
+}
+
+@mixin lt($value) {
+
+    @media (max-width: #{$value}px) {
+        @content;
+    }
+
+}
+
+@mixin gt($value) {
+
+    @media (min-width: #{$value}px) {
+        @content;
+    }
+
+}
+
+@mixin landscape {
+
+    @media (max-width: $tablet) and (orientation: landscape) {
+        @content;
+    }
+
+}
+
+@mixin stroke($color: #000, $size: 1px) {
+    text-shadow:
+        -#{$size} -#{$size} 0 $color,
+        0        -#{$size} 0 $color,
+        #{$size} -#{$size} 0 $color,
+        #{$size}  0        0 $color,
+        #{$size}  #{$size} 0 $color,
+        0         #{$size} 0 $color,
+        -#{$size}  #{$size} 0 $color,
+        -#{$size}  0        0 $color;
+}
+
+@mixin hide-text {
+    font-size: 0;
+    text-indent: -5000px;
+}
+
+@mixin wide-text {
+    display: inline-block;
+    transform-origin: center top;
+    transform: scaleX(1.2);
+}
+
+@mixin narrow-text {
+    display: inline-block;
+    transform-origin: left top;
+    transform: scaleX(0.95);
+}
+
+@mixin blink-button($y, $color: #fefefe) {
+    --button-y: #{$y};
+    --color: #{$color};
+    animation: blinkButton 1s linear infinite;
+    @keyframes blinkButton {
+        0% {
+            color: #ffffff;
+            background-position: center 0;
+        }
+        49.5% {
+            color: #ffffff;
+            background-position: center 0;
+        }
+        50% {
+            color: var(--color);
+            background-position: center var(--button-y);
+        }
+        100% {
+            color: var(--color);
+            background-position: center var(--button-y);
+        }
+    }
+}
+
+@mixin moveFadeDefault($props: (transform, opacity), $dur: $primaryDuration, $delay: 0s, $ease: ease, $value: 30%) {
+    will-change: $props;
+    @if $props == (transform, opacity) {
+        transform: translateY($value);
+    } @else if $props == (margin, opacity) {
+        margin-top: $value;
+    }
+    opacity: 0;
+    transition-property: $props;
+    transition-duration: $dur;
+    transition-delay: $delay;
+    transition-timing-function: $ease;
+}
+
+@mixin moveFadeIn($props: transform) {
+    @if $props == transform {
+        transform: translateY(0);
+    } @else if $props == (margin) {
+        margin-top: 0;
+    }
+    opacity: 1;
+}
+
+@mixin setMoveInDelay($length) {
+    
+    @for $i from 1 through $length {
+        .move-in:nth-child(#{$i}) {
+            transition-delay: $i * 0.125s;
+        }
+    }
+
+}
+
+@mixin scaleDefault {
+    transition: all $primaryDuration ease-out;
+    transition-property: opacity, transform;
+    transform: scale(0) translateZ(0);
+    opacity: 0;
+    backface-visibility: hidden;
+    will-change: transform, opacity
+}
+
+@mixin scaleIn {
+    transform: scale(1);
+    opacity: 1;
+}
+
+@mixin fadeDefault {
+    transition-duration: $primaryDuration;
+    transition-timing-function: ease;
+    transition-property: opacity;
+    will-change: opacity;
+    opacity: 0;
+}
+
+@mixin fadeIn {
+    opacity: 1;
+}
+
+@mixin inner {
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    @include tablet {
+        max-width: none;
+    }
+}
+
