@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
+import { resolve } from 'path'
+// import basicSsl from '@vitejs/plugin-basic-ssl'
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
@@ -19,8 +21,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': '/src'
-      }
+        '@': resolve(__dirname, 'src'),
+      },
     },
     server: {
       // proxy:{
@@ -43,6 +45,20 @@ export default defineConfig(({ mode }) => {
       //     }
       //   }
       // }
-    }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          // 移除 JS 檔案的 hash - 會生成 assets/index.js
+          entryFileNames: 'assets/[name].js',
+
+          // 移除 CSS 檔案的 hash - 會生成 assets/index.css
+          assetFileNames: 'assets/[name].[ext]',
+
+          // 移除 chunk 檔案的 hash
+          chunkFileNames: 'assets/[name].js',
+        },
+      },
+    },
   }
 })
