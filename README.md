@@ -1,97 +1,54 @@
-# <PROJECT_NAME>
+# 🎬 CineMind
 
-{"tags":["Medialand"]}
+個人影視觀點工作台：在 Telegram 上與「毒舌影評人」AI 辯論電影觀點，`/generate` 一鍵把對話煉成結構化影評歸檔，再用 Dashboard 回顧與統計。
 
-## Website Information
-### 正式站
-網址：  
-FTP：210.61.2.238
+**閉環**：對話 → 辯論 → 結構化歸檔 → 數據可視化
+**技術棧**（全免費額度）：Telegram Bot + Vercel Functions + Gemini 2.5 Flash + OMDb API + Upstash Redis + Vue 3 + Tailwind CSS v4
 
-### 測試站
-網址：  
-FTP：220.128.166.83
+## Bot 指令
 
-### Odoo 卡片
-<https://mlitfb.odoo.com/odoo/project/1/tasks/:TASK_ID>
+| 指令 | 說明 |
+|---|---|
+| `/movie <片名>` | 開始討論一部電影（中文片名即可，自動對齊 OMDb 官方資料） |
+| （直接打字/語音） | 與影評人辯論，AI 會反問、挑戰你的觀點 |
+| `/generate` | 觸發觀點打造器：盲點挖掘 → 論點對撞 → 風格重塑 → 歸檔 |
+| `/list` | 最近 5 筆已歸檔的影評 |
+| `/cancel` | 放棄目前討論 |
 
-## Preparation
-1. 搜尋專案資料夾內所有的 `<PROJECT_NAME>`，替換為該專案 Repository 名稱，例如：`2024_07_vue2_project_template`。
-2. 請填入並確認 README.md 文件中正式站及測試站網址及 FTP 位置，並將 Trello 卡片網址中的 `CARD_ID` 進行替換。
-3. 於 public 資料夾中新增該專案的 `meta.jpg` 與 `favicon.png`。
-4. 善用 Vue 環境變數，目前分為開發模式：`.env`、測試站模式：`.env.stage`、正式站模式：`.env.production`，如有其他需求請自行增加調整。
-5. 請將 src/index.js 中的 `<GA_ID>` 替換為該專案 GA 追蹤碼 Id，例如：`G-ABCDE12345`。
-6. 請確認專案中有無參雜其他品牌的相關資訊與圖檔。
+## Setup（一次性）
 
-## Node Version
-```
-v18.17.0
-```
+1. **Telegram Bot**：找 [@BotFather](https://t.me/BotFather) `/newbot` 取得 token；建議再用 `/setcommands` 註冊上表指令。
+2. **Gemini API Key**：[Google AI Studio](https://aistudio.google.com/apikey) 免費申請。
+3. **OMDb API Key**：[omdbapi.com](https://www.omdbapi.com/apikey.aspx) 申請 Free key（email 開通，1000 req/day）。
+4. **Vercel**：建立專案連結此 repo → Marketplace 安裝 **Upstash Redis**（free）→ 於 Storage 頁確認 `UPSTASH_REDIS_REST_URL/TOKEN` 已注入。
+5. `cp .env.example .env` 填入所有值（Upstash 的 URL/TOKEN 從 console 複製，本機與線上共用同一 instance）。
+6. **取得本人 chat id**：`npm run dev:bot` 後對 bot 說一句話，終端機 log 會印出 chat id，填入 `TELEGRAM_ALLOWED_CHAT_ID`（本機與 Vercel 都要設）。
+7. Vercel dashboard 補齊其餘環境變數（見 `.env.example`）。
 
-## Project setup
-```
+## 本機開發
+
+```bash
 npm install
+npm run dev:bot    # 本機 long-polling 跑 bot（免 tunnel；會自動解除 webhook）
+npm run dev        # 前端 Dashboard
+npm run dev:full   # vercel dev：前端 + api/ 一起跑
 ```
 
-### Compiles and hot-reloads for development（啟動 Dev Server）
-```
-npm run serve
-```
+> `dev:bot` 會呼叫 `deleteWebhook`，本機測完部署後記得重新 setWebhook（下一節）。
 
-### Compiles and minifies for stage（打包至測試機）
-```
-npm run stage
-```
-
-### Compiles and minifies for production（打包至正式機）
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
-
-## 腳本工具
-
-### 圖片壓縮腳本
-
-使用 Tinify API 自動壓縮 `dist/assets` 目錄下的所有圖片。
+## 部署
 
 ```bash
-# 安裝依賴
-npm install tinify glob dotenv --save-dev
-
-# 在 .env 檔案中設置 API key
-TINIFY_API_KEY=your_api_key_here
-
-# 單獨執行壓縮(需先 build)
-npm run compress
-
-# 編譯後直接壓縮
-npm run stage
+vercel --prod
 ```
 
-### 組件生成腳本
-
-快速生成新的頁面和組件，並自動配置路由。
+綁定 webhook（`<SECRET>` 自產亂數，需與 Vercel 環境變數 `TELEGRAM_SECRET_TOKEN` 一致）：
 
 ```bash
-# 基本用法
-npm run create:component <組件名稱>
-
-# 範例：創建 User 相關檔案
-npm run create:component User
+curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<app>.vercel.app/api/telegram&secret_token=<SECRET>&drop_pending_updates=true"
+curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"   # 確認 last_error_message 為空
 ```
 
-執行後會自動生成：
-- `src/views/<組件名稱>Page.vue`
-- `src/components/<組件名稱>.vue`
-- 自動配置路由到 `src/router/index.js`
+## 架構與開發規範
 
-例如執行 `npm run create:component User` 會：
-1. 創建 `src/views/UserPage.vue`
-2. 創建 `src/components/User.vue`
-3. 添加 `/user` 路由到路由配置中
+見 [CLAUDE.md](./CLAUDE.md)（架構圖、Redis key schema、api/_lib 職責、關鍵規則）。

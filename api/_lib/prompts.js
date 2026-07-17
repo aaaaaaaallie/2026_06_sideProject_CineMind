@@ -1,0 +1,87 @@
+// 影評人 persona 與觀點打造器三段 prompt。全部純字串模板，方便日後調校。
+
+export const CRITIC_SYSTEM_PROMPT = `你是一位閱片量極大、觀點犀利的硬核影評人，正在和朋友辯論電影。你的原則：
+
+1. 絕不一味附和。對方說得再好，也要找出論證的薄弱處或被忽略的面向來挑戰。
+2. 用具體證據辯論：場面調度、剪輯節奏、劇本結構、表演細節、導演前作脈絡、影史對照，不空談形容詞。
+3. 直接、犀利，甚至有點刁鑽，但對事不對人，不做無意義的抬槓。
+4. 每次回覆最後丟出一個尖銳的反問，逼對方把想法說得更深。
+5. 使用繁體中文（台灣用語），長度控制在 120–250 字，像即時通訊一樣好讀。
+6. 若對方明顯講錯事實（記錯情節、張冠李戴），直接指出。`
+
+// 把 session history 序列化成三段 prompt 共用的逐字稿
+export function transcript(session) {
+  return session.history
+    .map(m => `${m.role === 'user' ? '我' : '影評人'}：${m.text}`)
+    .join('\n\n')
+}
+
+function movieHeader(session) {
+  return `電影：《${session.movieTitleZh}》（${session.movieTitleEn}, ${session.year}）` +
+    (session.genres?.length ? `｜類型：${session.genres.join(' / ')}` : '')
+}
+
+// Stage A 盲點挖掘
+export function stageAPrompt(session) {
+  return `${movieHeader(session)}
+
+以下是我（觀眾）與一位硬核影評人關於這部電影的辯論逐字稿：
+
+---
+${transcript(session)}
+---
+
+任務：從這場對話中，挖掘出 2–3 個「雙方都沒有充分展開、但最有價值」的觀點或盲點。可以是被輕輕帶過的線索、雙方共同的預設、或這部電影更深一層卻沒被觸及的議題。每個盲點用一個小標題加 2–3 句說明，繁體中文輸出。`
+}
+
+// Stage B 論點對撞
+export function stageBPrompt(session, blindspots) {
+  return `${movieHeader(session)}
+
+辯論逐字稿：
+
+---
+${transcript(session)}
+---
+
+前一階段挖掘出的盲點：
+
+---
+${blindspots}
+---
+
+任務：整理這場辯論的「論點對撞」。輸出三個部分（繁體中文）：
+1. 我方核心立場：我對這部電影最強的論證是什麼（忠實呈現，不要美化）。
+2. 影評人核心立場：對方最有殺傷力的反駁是什麼。
+3. 交鋒火花：雙方觀點碰撞後產生的更深一層洞見（可結合盲點），這是整場對話最有價值的思想產出。`
+}
+
+// Stage C 風格重塑
+export function stageCPrompt(session, blindspots, clash) {
+  return `${movieHeader(session)}
+
+辯論逐字稿（注意「我」說話的語氣、用詞、口頭禪——等一下要模仿）：
+
+---
+${transcript(session)}
+---
+
+盲點挖掘結果：
+
+---
+${blindspots}
+---
+
+論點對撞結果：
+
+---
+${clash}
+---
+
+任務：以「我」在對話中的語氣與用詞習慣，把以上素材重塑成一篇可直接發表的影評懶人包。要求：
+- Markdown 排版：一個吸睛的標題（# 開頭）、2–4 個小節（## 開頭）、適度使用粗體與列點。
+- 結構建議：核心觀點 → 最精彩的交鋒/反方怎麼說 → 被忽略的盲點 → 一句話結語。
+- 全文 600–1000 字，繁體中文（台灣用語）。
+- 第一人稱，寫得像「我」本人整理的觀後感，不是 AI 的客觀總結。
+- 只輸出文章本身，不要任何說明文字。`
+}

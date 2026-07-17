@@ -11,7 +11,19 @@ node_modules
 dist
 dist-ssr
 *.local
-backup/*
+
+# 環境變數（金鑰絕不進版控）
+.env
+.env.*
+!.env.example
+.vercel
+
+# Claude Code 個人本機設定
+.claude/settings.local.json
+
+# 測試 / lint 快取
+coverage
+.eslintcache
 
 # Editor directories and files
 .vscode/*
@@ -23,13 +35,3 @@ backup/*
 *.njsproj
 *.sln
 *.sw?
-image-data.json
-*/sprite-generator
-
-tracking_events.json
-*.csv
-*.xlsx
-.gemini/*
-reference/*
-CLAUDE.md
-.cursorrules
