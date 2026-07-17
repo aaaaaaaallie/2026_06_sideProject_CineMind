@@ -51,4 +51,12 @@ curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"   # 確認 last_error_
 
 ## 架構與開發規範
 
-見 [CLAUDE.md](./CLAUDE.md)（架構圖、Redis key schema、api/_lib 職責、關鍵規則）。
+完整文件見 [docs/](./docs/README.md)：
+
+- [架構、資料流、Redis key schema](./docs/ARCHITECTURE.md)
+- [開發規範與關鍵規則](./docs/DEVELOPMENT.md)
+- [功能清單與 Phase 進度](./docs/FEATURES.md)
+- [手動驗證清單](./docs/TESTING.md)
+- [更新日誌](./docs/CHANGELOG.md)
+
+AI 協作入口為 [CLAUDE.md](./CLAUDE.md)。
