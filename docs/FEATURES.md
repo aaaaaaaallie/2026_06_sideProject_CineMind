@@ -7,6 +7,7 @@
 | Phase 0 | 模板改造、安全前置 | ✅ 完成 |
 | Phase 1 | Bot 後端閉環（含語音 stretch） | ✅ 完成 |
 | Phase 2 | Dashboard（TokenGate、年份 Accordion、genre 篩選、純 CSS 圖表） | ✅ 完成 |
+| Phase 3 | API 串接與部署上線（憑證補齊、金鑰實測、Vercel 部署、webhook 綁定） | ⬜ 進行中（見 `docs/plans/2026-07-18-phase3-api串接與部署上線.md`） |
 
 ## Bot 功能（Phase 1，✅）
 
