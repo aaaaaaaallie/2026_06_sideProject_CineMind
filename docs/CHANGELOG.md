@@ -6,6 +6,7 @@
 
 ### Added
 
+- Phase 2 Dashboard：TokenGate（localStorage token、401 自動登出）、年份 Accordion、年份/genre 多維度篩選、純 CSS 統計（KPI 卡 + 類型分佈條）、digest Markdown 渲染。
 - `docs/` 文件架構：ARCHITECTURE、DEVELOPMENT、FEATURES、TESTING、CHANGELOG、plans/ 歸檔流程。
 
 ### Changed

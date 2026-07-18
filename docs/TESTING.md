@@ -46,6 +46,26 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 - [ ] 帶錯誤 secret header 打 `/api/telegram`：被拒絕（但仍回 200 空體，不觸發重送）。
 - [ ] 線上跑一輪完整流程：`/movie` → 辯論 → `/generate` → `/list`。
 
-## Dashboard（Phase 2 實作後補充）
+## Dashboard
 
-TokenGate、年份 Accordion、genre 篩選、圖表的驗證項目待 Phase 2 開發時於計畫檔定義後搬入此處。
+需要 API 一起跑：`npm run dev:full`（vercel dev），或部署後直接在線上驗證。
+
+### TokenGate
+
+- [ ] 無 token / 錯誤 token：停在輸入畫面並顯示「Token 不正確」；API 掛掉時顯示連線失敗。
+- [ ] 正確 token：進入 Dashboard；重整頁面免重新輸入（localStorage）。
+- [ ] 登出：回到 TokenGate，localStorage 的 `cinemind_token` 已清除。
+- [ ] 線上 token 改掉後重整：401 自動登出並提示重新輸入。
+
+### 列表與篩選
+
+- [ ] reviews 依上映年份分組、年份新→舊，組內依歸檔時間新→舊。
+- [ ] 年份選單 + genre chips 篩選結果正確（genre 多選為 OR，與年份 AND）；「符合/總數」計數與統計面板同步連動。
+- [ ] 清除篩選一鍵還原。
+- [ ] 點開影評：digest Markdown 正常渲染（標題/清單/引用/粗體，含長文）；無海報的 review 顯示 🎬 佔位。
+- [ ] 空資料時顯示引導文案（去 Telegram /generate）。
+
+### 版面與建置
+
+- [ ] 375px 視窗：genre chips 可橫向滾動、Accordion 可操作、版面無橫向捲動。
+- [ ] `npm run build` 通過；`dist/` 內 grep 不到任何金鑰。

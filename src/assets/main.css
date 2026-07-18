@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+/* digest Markdown 的最小 prose 樣式（Tailwind preflight 會清掉預設樣式，且不引入 typography plugin） */
+.digest-prose {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--color-neutral-300);
+  overflow-wrap: break-word;
+}
+.digest-prose h1,
+.digest-prose h2,
+.digest-prose h3 {
+  color: var(--color-neutral-100);
+  font-weight: 700;
+  margin: 1.1em 0 0.4em;
+}
+.digest-prose h1 { font-size: 1.15rem; }
+.digest-prose h2 { font-size: 1.05rem; }
+.digest-prose h3 { font-size: 0.95rem; }
+.digest-prose p { margin: 0.6em 0; }
+.digest-prose ul,
+.digest-prose ol {
+  margin: 0.6em 0;
+  padding-inline-start: 1.4em;
+}
+.digest-prose ul { list-style: disc; }
+.digest-prose ol { list-style: decimal; }
+.digest-prose li { margin: 0.25em 0; }
+.digest-prose blockquote {
+  margin: 0.8em 0;
+  padding-inline-start: 0.9em;
+  border-inline-start: 2px solid var(--color-neutral-700);
+  color: var(--color-neutral-400);
+}
+.digest-prose strong { color: var(--color-neutral-100); }
+.digest-prose hr {
+  margin: 1em 0;
+  border-color: var(--color-neutral-800);
+}
+.digest-prose code {
+  background: var(--color-neutral-800);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+}
+.digest-prose a {
+  color: var(--color-blue-400);
+  text-decoration: underline;
+}

@@ -6,7 +6,7 @@
 |---|---|---|
 | Phase 0 | 模板改造、安全前置 | ✅ 完成 |
 | Phase 1 | Bot 後端閉環（含語音 stretch） | ✅ 完成 |
-| Phase 2 | Dashboard（TokenGate、年份 Accordion、genre 篩選、純 CSS 圖表） | ⬜ 未開始（`src/App.vue` 為佔位殼） |
+| Phase 2 | Dashboard（TokenGate、年份 Accordion、genre 篩選、純 CSS 圖表） | ✅ 完成 |
 
 ## Bot 功能（Phase 1，✅）
 
@@ -56,11 +56,12 @@
 
 `GET /api/reviews` — Bearer `DASHBOARD_TOKEN` 驗證，回傳歸檔 reviews，供 Dashboard 使用。
 
-## Dashboard（Phase 2，⬜）
+## Dashboard（Phase 2，✅）
 
-計畫功能：
+深色主題、行動端優先的高資訊密度後台（`src/App.vue` + `src/components/` + `src/stores/reviews.js`）：
 
-- **TokenGate**：使用者輸入 token（存 localStorage），前端零環境變數。
-- **年份 Accordion**：依年份分組展開影評清單。
-- **Genre 篩選**：依類型過濾。
-- **純 CSS 圖表**：觀影統計可視化（不引圖表函式庫）。
+- **TokenGate**：輸入 token 打 `/api/reviews` 驗證，成功存 localStorage（重整免重輸）；401 自動登出退回輸入畫面。前端零環境變數。
+- **年份 Accordion**：依上映年份分組（新→舊），組內依歸檔時間排序；每筆收合列顯示海報縮圖（無海報以 🎬 佔位）、中英片名、genre 標籤、字數、歸檔日期，點開以 `marked` 渲染完整 digest。
+- **多維度篩選**：年份下拉選單 + genre 橫向滾動 chips（可多選，OR 邏輯；與年份為 AND）；顯示「符合/總數」並可一鍵清除。
+- **純 CSS 統計**：KPI 卡（影評數、總字數、平均字數、涵蓋年份）+ 類型分佈條（單色相水平條，超過 8 類折進「其他」），隨篩選條件連動。
+- 空狀態 / 載入中 / 錯誤重試畫面。
