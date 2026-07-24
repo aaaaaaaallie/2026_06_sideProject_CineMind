@@ -5,8 +5,10 @@
 ### Gemini
 
 - **SDK 用 `@google/genai`**，不是已棄停的 `@google/generative-ai`。
-- 日常辯論回覆必須 `thinkingConfig: { thinkingBudget: 0 }`——2.5-flash 預設會開 thinking，回覆會拖到 5–15s，辯論體驗直接毀掉。
+- 日常辯論回覆必須 `thinkingConfig: { thinkingBudget: 0 }`——flash 模型預設會開 thinking，回覆會拖到 5–15s，辯論體驗直接毀掉。
 - 只有 `/generate` 三段鏈（Stage A/B/C）開 thinking budget，品質優先於速度。
+- **免費層每個 model 的每日額度是分開算的**，且新專案的額度可能遠低於公開文件寫的數字（實測 `gemini-3.5-flash` 只有 20 次/天）。`gemini.js` 的 `MODELS` 陣列是降級鏈：主 model 額度用完（429/RESOURCE_EXHAUSTED）時自動換下一個獨立配額的 model；非額度錯誤直接拋出，不做無意義重試。新增/替換 model 前務必先用 `models?key=...` 的 ListModels 端點與最小 `generateContent` 呼叫實測，不要只憑 model 名稱猜測是否可用。
+- 呼叫 Gemini 可能因額度失敗，呼叫端（`bot.js`）要用 `isQuotaError()` 判斷並回使用者看得懂的提示，不能讓錯誤靜默吞掉。
 
 ### Vercel Functions
 
@@ -41,7 +43,7 @@
 
 1. 新計畫寫在 `docs/plans/`，命名 `YYYY-MM-DD-標題.md`，內含目標、步驟、驗證清單。
 2. 開發中依計畫的驗證清單以 `npm run dev:bot` 手動驗證（無測試框架，見 [TESTING.md](./TESTING.md)）。
-3. 完成後：更新 [FEATURES.md](./FEATURES.md) 狀態與 [CHANGELOG.md](./CHANGELOG.md)，計畫檔移入 `docs/plans/archive/`。
+3. 完成後：更新 [FEATURES.md](./FEATURES.md) 狀態與 [CHANGELOG.md](./CHANGELOG.md)，計畫檔移入 `docs/plans/archive/`。CHANGELOG 不必等計畫整個歸檔才寫——每個使用者能感受到的實質行為變化（新功能、修正、調整），發生當下就加進 `[Unreleased]`，每條項目句尾加註 `(YYYY-MM-DD)` 實際發生日期，同分類（Added/Changed/Fixed）內新到舊排序。
 
 ## 環境變數
 

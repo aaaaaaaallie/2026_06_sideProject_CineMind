@@ -1,11 +1,11 @@
 import { redis } from './redis.js'
 import { sendMessage, sendChatAction, sendPhoto, getFileBuffer } from './telegram-api.js'
-import { chatReply, transcribeAudio } from './gemini.js'
+import { chatReply, transcribeAudio, isQuotaError } from './gemini.js'
 import { alignAndFetch } from './omdb.js'
 import { getSession, setSession, clearSession } from './session.js'
 import { listReviews } from './reviews.js'
 import { runDebateEngine } from './debate.js'
-import { CRITIC_SYSTEM_PROMPT } from './prompts.js'
+import { criticSystemPrompt } from './prompts.js'
 
 // webhook（api/telegram.js）與本機 poller（scripts/dev-bot.js）共用的核心入口。
 // waitUntil：Vercel 上傳入 @vercel/functions 的 waitUntil；本機直接 await。
@@ -68,6 +68,14 @@ export async function handleUpdate(update, { waitUntil = p => p } = {}) {
   return handleDebateTurn(chatId, session, text)
 }
 
+// Gemini 額度/頻率限制錯誤要給使用者看得懂的提示，而不是靜默失敗（見 CHANGELOG）
+function aiErrorMessage(err) {
+  if (isQuotaError(err)) {
+    return '⚠️ AI 額度暫時用完了（免費層有每日上限），晚點再試一次看看。'
+  }
+  return '⚠️ AI 暫時出了點問題，稍後再試一次。'
+}
+
 function handleStart(chatId) {
   return sendMessage(chatId, [
     '🎬 *CineMind* — 你的毒舌影評辯論夥伴',
@@ -85,7 +93,13 @@ async function handleMovie(chatId, rawTitle) {
   if (!title) return sendMessage(chatId, '請帶上片名，例如：/movie 寄生上流')
 
   await sendChatAction(chatId)
-  const movie = await alignAndFetch(title)
+  let movie
+  try {
+    movie = await alignAndFetch(title)
+  } catch (err) {
+    console.error('/movie 片名對齊失敗：', err)
+    return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
+  }
 
   const session = {
     movieTitleZh: title,
@@ -94,6 +108,9 @@ async function handleMovie(chatId, rawTitle) {
     year: movie.year,
     genres: movie.genres,
     posterUrl: movie.posterUrl,
+    plot: movie.plot,
+    actors: movie.actors,
+    director: movie.director,
     history: [],
     startedAt: new Date().toISOString(),
   }
@@ -113,7 +130,13 @@ async function handleMovie(chatId, rawTitle) {
   await sendChatAction(chatId)
   const openingUserMsg =
     `我剛看完《${title}》（${movie.title}, ${movie.year}）。先別問我觀點，你先說：這部片最被高估或最被低估的一點是什麼？開戰吧。`
-  const opening = await chatReply([{ role: 'user', text: openingUserMsg }], CRITIC_SYSTEM_PROMPT)
+  let opening
+  try {
+    opening = await chatReply([{ role: 'user', text: openingUserMsg }], criticSystemPrompt(session))
+  } catch (err) {
+    console.error('/movie 開場白失敗：', err)
+    return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
+  }
   session.history.push({ role: 'user', text: openingUserMsg }, { role: 'model', text: opening })
   await setSession(chatId, session)
   return sendMessage(chatId, opening)
@@ -122,10 +145,15 @@ async function handleMovie(chatId, rawTitle) {
 async function handleDebateTurn(chatId, session, text) {
   await sendChatAction(chatId)
   session.history.push({ role: 'user', text })
-  const reply = await chatReply(session.history, CRITIC_SYSTEM_PROMPT)
-  session.history.push({ role: 'model', text: reply })
-  await setSession(chatId, session)
-  return sendMessage(chatId, reply)
+  try {
+    const reply = await chatReply(session.history, criticSystemPrompt(session))
+    session.history.push({ role: 'model', text: reply })
+    await setSession(chatId, session)
+    return sendMessage(chatId, reply)
+  } catch (err) {
+    console.error('辯論回覆失敗：', err)
+    return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
+  }
 }
 
 async function handleGenerate(chatId, waitUntil) {

@@ -15,7 +15,7 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 - [ ] `/start`：收到歡迎訊息。
 - [ ] `/movie 星際效應`：收到電影卡片，英文片名/年份/海報正確（驗證 Gemini 對齊 + OMDb）。
 - [ ] `/movie <冷門或亂打的片名>`：OMDb miss 時仍能開始討論（fallback，無海報）。
-- [ ] 已有 session 時再 `/movie`：提示先 `/generate` 或 `/cancel`。
+- [ ] 已有 session 時再 `/movie`：**目前無防呆**，會直接覆蓋舊 session（無提示），確認這是已知行為而非新 bug。
 - [ ] `/cancel`：session 清除，之後打字會提示先 `/movie`。
 - [ ] `/list`：列出最近 5 筆歸檔影評；空清單時有合理提示。
 

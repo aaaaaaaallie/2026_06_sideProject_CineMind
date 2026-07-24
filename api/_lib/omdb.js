@@ -34,6 +34,9 @@ export async function alignAndFetch(zhTitle) {
       year: aligned.year,
       genres: [],
       posterUrl: null,
+      plot: null,
+      actors: null,
+      director: null,
       omdbMiss: true,
     }
   }
@@ -57,5 +60,9 @@ async function fetchOmdb(title, year) {
     year: data.Year,
     genres: data.Genre && data.Genre !== 'N/A' ? data.Genre.split(',').map(s => s.trim()) : [],
     posterUrl: data.Poster && data.Poster !== 'N/A' ? data.Poster : null,
+    // 訓練資料cutoff之後上映的新片，Gemini 不會知道劇情——用這些欄位讓辯論 persona 至少有基本事實可用
+    plot: data.Plot && data.Plot !== 'N/A' ? data.Plot : null,
+    actors: data.Actors && data.Actors !== 'N/A' ? data.Actors : null,
+    director: data.Director && data.Director !== 'N/A' ? data.Director : null,
   }
 }

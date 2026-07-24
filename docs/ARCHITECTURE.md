@@ -9,7 +9,7 @@
      │ Webhook（X-Telegram-Bot-Api-Secret-Token 驗證）
      ▼
 [api/telegram.js] Vercel Function（maxDuration 60）
-     ├─► api/_lib/gemini.js   — Gemini 2.5 Flash（@google/genai）
+     ├─► api/_lib/gemini.js   — Gemini 3.5 Flash（@google/genai）
      ├─► api/_lib/omdb.js     — 中文片名 → Gemini 對齊英文片名 → OMDb 海報/年份/類型
      └─► api/_lib/redis.js    — Upstash Redis（session、快取、reviews）
      │
@@ -67,7 +67,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 | Key | 型別 | 說明 |
 |---|---|---|
-| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則 |
+| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給辯論 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片 |
 | `reviews:ids` | List | review id 列表（LPUSH，新到舊） |
 | `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL |
 | `omdb:title:{en}:{year}` / `omdb:{imdbID}` | JSON | OMDb 快取，TTL 30 天 |
@@ -86,4 +86,4 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 ## 技術棧
 
-全免費額度：Telegram Bot API、Vercel Functions、Gemini 2.5 Flash（`@google/genai`）、OMDb API、Upstash Redis、Vue 3、Pinia、Tailwind CSS v4（`@tailwindcss/vite`）、Vite 6。
+全免費額度：Telegram Bot API、Vercel Functions、Gemini 3.5 Flash（`@google/genai`）、OMDb API、Upstash Redis、Vue 3、Pinia、Tailwind CSS v4（`@tailwindcss/vite`）、Vite 6。

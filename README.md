@@ -3,7 +3,7 @@
 個人影視觀點工作台：在 Telegram 上與「毒舌影評人」AI 辯論電影觀點，`/generate` 一鍵把對話煉成結構化影評歸檔，再用 Dashboard 回顧與統計。
 
 **閉環**：對話 → 辯論 → 結構化歸檔 → 數據可視化
-**技術棧**（全免費額度）：Telegram Bot + Vercel Functions + Gemini 2.5 Flash + OMDb API + Upstash Redis + Vue 3 + Tailwind CSS v4
+**技術棧**（全免費額度）：Telegram Bot + Vercel Functions + Gemini 3.5 Flash + OMDb API + Upstash Redis + Vue 3 + Tailwind CSS v4
 
 ## Bot 指令
 

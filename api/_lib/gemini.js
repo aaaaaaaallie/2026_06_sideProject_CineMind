@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 
-const MODEL = 'gemini-2.5-flash'
+// 免費層每個 model 的每日額度是分開算的；3.5-flash 用完時換 3.1-flash-lite 頂上（各自獨立配額）
+const MODELS = ['gemini-3.5-flash', 'gemini-3.1-flash-lite']
 
 let client
 function ai() {
@@ -11,24 +12,30 @@ function ai() {
   return client
 }
 
-// 免費層 RPM 有限，429 時等 5 秒重試一次
-async function withRetry(fn) {
-  try {
-    return await fn()
-  } catch (err) {
-    if (String(err).includes('429')) {
-      await new Promise(r => setTimeout(r, 5000))
-      return fn()
-    }
-    throw err
-  }
+// 判斷是否為 Gemini 額度/頻率限制錯誤，讓呼叫端能回使用者看得懂的提示，而不是靜默失敗
+export function isQuotaError(err) {
+  return /429|RESOURCE_EXHAUSTED/i.test(String(err))
 }
 
-// 日常辯論：thinkingBudget 0 壓延遲（2.5-flash 預設 thinking 會拖到 5–15s）
+// 依序嘗試 MODELS：非額度錯誤直接拋出（避免掩蓋真正的 bug）；額度錯誤才換下一個 model 重試
+async function withFallback(call) {
+  let lastErr
+  for (const model of MODELS) {
+    try {
+      return await call(model)
+    } catch (err) {
+      lastErr = err
+      if (!isQuotaError(err)) throw err
+    }
+  }
+  throw lastErr
+}
+
+// 日常辯論：thinkingBudget 0 壓延遲（flash 預設 thinking 會拖到 5–15s）
 export function chatReply(history, systemInstruction) {
-  return withRetry(async () => {
+  return withFallback(async model => {
     const res = await ai().models.generateContent({
-      model: MODEL,
+      model,
       contents: history.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
       config: {
         systemInstruction,
@@ -40,9 +47,9 @@ export function chatReply(history, systemInstruction) {
 }
 
 export function generateJSON(prompt, responseSchema) {
-  return withRetry(async () => {
+  return withFallback(async model => {
     const res = await ai().models.generateContent({
-      model: MODEL,
+      model,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -56,9 +63,9 @@ export function generateJSON(prompt, responseSchema) {
 
 // /generate 三段鏈：保留 thinking 換品質，延遲由 waitUntil 背景吸收
 export function generateText(prompt, { thinkingBudget = 1024 } = {}) {
-  return withRetry(async () => {
+  return withFallback(async model => {
     const res = await ai().models.generateContent({
-      model: MODEL,
+      model,
       contents: prompt,
       config: { thinkingConfig: { thinkingBudget } },
     })
@@ -67,9 +74,9 @@ export function generateText(prompt, { thinkingBudget = 1024 } = {}) {
 }
 
 export function transcribeAudio(buffer, mimeType = 'audio/ogg') {
-  return withRetry(async () => {
+  return withFallback(async model => {
     const res = await ai().models.generateContent({
-      model: MODEL,
+      model,
       contents: [{
         role: 'user',
         parts: [

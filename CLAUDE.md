@@ -4,7 +4,7 @@
 
 CineMind — 個人影視觀點工作台。閉環流程：**Telegram 對話 → AI（毒舌影評人）辯論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
 
-技術棧（全免費額度）：Telegram Bot + Vercel Functions + Gemini 2.5 Flash（`@google/genai`）+ OMDb + Upstash Redis + Vue 3 + Tailwind v4。
+技術棧（全免費額度）：Telegram Bot + Vercel Functions + Gemini 3.5 Flash（`@google/genai`）+ OMDb + Upstash Redis + Vue 3 + Tailwind v4。
 
 ## 常用指令
 

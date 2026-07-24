@@ -7,7 +7,8 @@
 | Phase 0 | 模板改造、安全前置 | ✅ 完成 |
 | Phase 1 | Bot 後端閉環（含語音 stretch） | ✅ 完成 |
 | Phase 2 | Dashboard（TokenGate、年份 Accordion、genre 篩選、純 CSS 圖表） | ✅ 完成 |
-| Phase 3 | API 串接與部署上線（憑證補齊、金鑰實測、Vercel 部署、webhook 綁定） | ⬜ 進行中（見 `docs/plans/2026-07-18-phase3-api串接與部署上線.md`） |
+| Phase 3a | 憑證串接與 bot 品質修正（8 個環境變數實測、model 名稱修正、額度降級鏈、新片討論、語氣調校） | ✅ 完成（見 `docs/plans/archive/2026-07-24-phase3a-憑證串接與bot品質修正.md`） |
+| Phase 3b | 本機驗證與部署上線（TESTING.md 全清單、Vercel 部署、webhook 綁定） | ⬜ 進行中（見 `docs/plans/2026-07-24-phase3b-本機驗證與部署上線.md`） |
 
 ## Bot 功能（Phase 1，✅）
 
@@ -20,11 +21,11 @@
 - 中文片名即可：Gemini 先對齊出英文片名與年份，再查 OMDb 取得海報、年份、類型。
 - OMDb 查詢帶年份失敗會去掉年份重試；查無資料 fallback 為無海報照樣開始討論。
 - 成功後建立 session（TTL 48h），送出電影卡片（海報 + 基本資料）。
-- 已有進行中討論時再 `/movie` 會提示先 `/generate` 或 `/cancel`。
+- **無防呆**：同一 chat 同時只能有一個進行中的討論，`/movie` 沒有檢查是否已有進行中討論，再打一次會直接覆蓋舊的 session（history 連同電影資訊一起消失），沒有警告或確認。想討論多部電影，需自行在換片前先 `/generate` 或 `/cancel`。
 
 ### 辯論（直接打字或語音）
 
-- AI 以「毒舌影評人」persona 回應：反問、挑戰使用者觀點，而非附和。
+- AI 以「毒舌影評人」persona 回應：反問、挑戰使用者觀點，而非附和。persona 會帶入 OMDb 的劇情/導演/主演資料，即使是訓練資料 cutoff 之後上映的新片，AI 也能就事實辯論而非坦承不知道。
 - 語音訊息：下載 voice file → Gemini 轉寫為文字 → 進入同一辯論流程。
 - 回覆走 thinking budget 0，維持秒級回應。
 - 對話 history 存進 session，上限 40 則。
