@@ -40,6 +40,15 @@ function movieHeader(session) {
     (session.genres?.length ? `｜類型：${session.genres.join(' / ')}` : '')
 }
 
+// 供 stageC 開頭簡介段落使用；OMDb 查無資料時回傳空字串，prompt 會據此跳過簡介
+function movieFacts(session) {
+  return [
+    session.plot ? `官方劇情簡介（英文原文）：${session.plot}` : null,
+    session.director ? `導演：${session.director}` : null,
+    session.actors ? `主演：${session.actors}` : null,
+  ].filter(Boolean).join('\n')
+}
+
 // Stage A 盲點挖掘
 export function stageAPrompt(session) {
   return `${movieHeader(session)}
@@ -77,6 +86,7 @@ ${blindspots}
 
 // Stage C 風格重塑
 export function stageCPrompt(session, blindspots, clash) {
+  const facts = movieFacts(session)
   return `${movieHeader(session)}
 
 辯論逐字稿（注意「我」說話的語氣、用詞、口頭禪——等一下要模仿）：
@@ -96,8 +106,9 @@ ${blindspots}
 ---
 ${clash}
 ---
-
+${facts ? `\n電影官方資料（只能用來寫開頭的劇情簡介，不能當成「我」的個人觀點使用）：\n\n${facts}\n` : ''}
 任務：以「我」在對話中的語氣與用詞習慣，把以上素材重塑成一篇可直接發表的影評。要求：
+- 標題（# 開頭）之後，先用客觀中性的語氣寫 2–3 句劇情簡介：上面有提供官方資料就據此改寫成繁體中文，只交代劇情、不摻雜個人評論或辯論裡的觀點；沒有提供官方資料就直接跳過這段，不要自己編劇情。空一行後再接「我」的個人觀後感。
 - 只留一個標題（# 開頭），內文用自然段落推進，不要為了湊格式硬拆小標題、不要條列式列點；核心觀點、交鋒、盲點這三塊素材要融進行文脈絡自然帶出，不用「首先/其次/最後」這種生硬串接，寫不出新東西的部分不用硬湊進去。
 - 全文控制在 600–1000 字，繁體中文（台灣用語），標點用全形。
 - 第一人稱，語氣要跟辯論逐字稿裡「我」的用詞習慣一致，讀起來像「我」本人整理的觀後感，不是 AI 的客觀總結。
