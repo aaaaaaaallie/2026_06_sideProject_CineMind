@@ -12,6 +12,10 @@
 - Phase 2 Dashboard：TokenGate（localStorage token、401 自動登出）、年份 Accordion、年份/genre 多維度篩選、純 CSS 統計（KPI 卡 + 類型分佈條）、digest Markdown 渲染。(2026-07-18)
 - `docs/` 文件架構：ARCHITECTURE、DEVELOPMENT、FEATURES、TESTING、CHANGELOG、plans/ 歸檔流程。(2026-07-17)
 
+### Removed
+
+- 語音輸入功能：移除 `gemini.js` 的 `transcribeAudio`、`telegram-api.js` 的 `getFileBuffer`，以及 `bot.js` 對語音訊息的處理，改為與非文字訊息一致直接忽略。(2026-08-07)
+
 ### Changed
 
 - `/movie` 遇到 OMDb 查無此片（`omdbMiss`）時，改為只回覆警告訊息請使用者確認片名重試，不再建立 session、不開始 AI 討論：原本的 fallback 行為會讓使用者對著一部可能查錯的片名跟 AI 辯論一整場，品質沒有保障。(2026-08-07)

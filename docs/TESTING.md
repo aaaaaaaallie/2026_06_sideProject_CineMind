@@ -24,7 +24,6 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 - [ ] 無 session 時直接打字：提示先 `/movie`。
 - [ ] 有 session 時打字：AI 以毒舌影評人 persona 回覆，**數秒內回應**（若拖到 5–15s，檢查 `thinkingBudget: 0` 是否失效）。
 - [ ] 連續多輪：AI 記得前文脈絡（history 有寫入 session）。
-- [ ] 語音訊息：正確轉寫並進入辯論流程。
 
 ### `/generate` 三段鏈
 

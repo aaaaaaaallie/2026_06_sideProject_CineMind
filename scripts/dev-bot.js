@@ -28,7 +28,7 @@ while (true) {
     for (const update of data.result) {
       offset = update.update_id + 1
       const msg = update.message
-      console.log(`update ${update.update_id} — chat ${msg?.chat?.id}：${msg?.text ?? (msg?.voice ? '(語音)' : '(非文字)')}`)
+      console.log(`update ${update.update_id} — chat ${msg?.chat?.id}：${msg?.text ?? '(非文字)'}`)
       try {
         await handleUpdate(update)
       } catch (err) {

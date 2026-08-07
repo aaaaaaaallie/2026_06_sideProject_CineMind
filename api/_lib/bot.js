@@ -1,6 +1,6 @@
 import { redis } from './redis.js'
-import { sendMessage, sendChatAction, sendPhoto, getFileBuffer } from './telegram-api.js'
-import { chatReply, transcribeAudio, isQuotaError } from './gemini.js'
+import { sendMessage, sendChatAction, sendPhoto } from './telegram-api.js'
+import { chatReply, isQuotaError } from './gemini.js'
 import { alignAndFetch } from './omdb.js'
 import { getSession, setSession, clearSession } from './session.js'
 import { listReviews } from './reviews.js'
@@ -32,22 +32,7 @@ export async function handleUpdate(update, { waitUntil = p => p } = {}) {
     if (first === null) return
   }
 
-  let text = message.text?.trim()
-
-  // 語音：下載 OGG → Gemini 轉寫 → 走同一條文字流程
-  if (message.voice) {
-    await sendChatAction(chatId)
-    try {
-      const buf = await getFileBuffer(message.voice.file_id)
-      text = await transcribeAudio(buf, message.voice.mime_type || 'audio/ogg')
-      await sendMessage(chatId, `🎧 我聽到你說：\n${text}`)
-    } catch (err) {
-      console.error('語音轉寫失敗：', err)
-      await sendMessage(chatId, '⚠️ 語音辨識失敗，請改用文字或再傳一次。')
-      return
-    }
-  }
-
+  const text = message.text?.trim()
   if (!text) return
 
   if (text.startsWith('/start')) return handleStart(chatId)
@@ -81,7 +66,7 @@ function handleStart(chatId) {
     '🎬 *CineMind* — 你的毒舌影評辯論夥伴',
     '',
     '/movie <片名> — 開始討論一部電影（中文片名即可）',
-    '直接打字或傳語音 — 與影評人辯論',
+    '直接打字 — 與影評人辯論',
     '/generate — 把這場辯論煉成一篇影評歸檔',
     '/list — 最近歸檔的影評',
     '/cancel — 放棄目前討論',

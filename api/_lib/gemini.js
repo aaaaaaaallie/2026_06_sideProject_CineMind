@@ -73,19 +73,3 @@ export function generateText(prompt, { thinkingBudget = 1024 } = {}) {
   })
 }
 
-export function transcribeAudio(buffer, mimeType = 'audio/ogg') {
-  return withFallback(async model => {
-    const res = await ai().models.generateContent({
-      model,
-      contents: [{
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: buffer.toString('base64') } },
-          { text: '請將這段語音完整轉寫為繁體中文逐字稿，只輸出逐字稿內容，不要任何前後綴。' },
-        ],
-      }],
-      config: { thinkingConfig: { thinkingBudget: 0 } },
-    })
-    return res.text.trim()
-  })
-}

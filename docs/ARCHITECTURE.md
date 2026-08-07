@@ -5,7 +5,7 @@
 閉環流程：**Telegram 對話 → AI（毒舌影評人）辯論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
 
 ```
-[Telegram Bot]（文字/語音輸入）
+[Telegram Bot]（文字輸入）
      │ Webhook（X-Telegram-Bot-Api-Secret-Token 驗證）
      ▼
 [api/telegram.js] Vercel Function（maxDuration 60）
@@ -26,7 +26,7 @@ api/
 ├── telegram.js        # Telegram webhook endpoint（Vercel Function）
 ├── reviews.js         # GET reviews API（Bearer token 保護，供 Dashboard 用）
 └── _lib/              # 共用模組（底線前綴 → Vercel 不當作 endpoint）
-    ├── bot.js         # handleUpdate：指令路由、白名單、冪等、語音、辯論回合
+    ├── bot.js         # handleUpdate：指令路由、白名單、冪等、辯論回合
     ├── debate.js      # runDebateEngine：/generate 三段鏈
     ├── gemini.js      # Gemini SDK 封裝
     ├── omdb.js        # 片名對齊 + OMDb 查詢/快取
@@ -49,13 +49,12 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 1. Telegram 送 update 到 `api/telegram.js`，驗證 `X-Telegram-Bot-Api-Secret-Token`。
 2. `bot.js handleUpdate`：白名單檢查（`TELEGRAM_ALLOWED_CHAT_ID`）→ 冪等鎖（`tg:update:{update_id}`）→ 指令路由。
-3. 語音訊息先經 `gemini.js transcribeAudio` 轉文字。
-4. 辯論文字進 `gemini.js chatReply`（thinking 0），history 寫回 session（上限 40 則）。
-5. 回覆一律由 `telegram-api.js sendMessage` 主動送出；webhook 本身永遠回 `200 {}`。
+3. 辯論文字進 `gemini.js chatReply`（thinking 0），history 寫回 session（上限 40 則）。
+4. 回覆一律由 `telegram-api.js sendMessage` 主動送出；webhook 本身永遠回 `200 {}`。
 
 ### `/movie <片名>` 開始討論
 
-`omdb.js alignAndFetch`：Gemini JSON 對齊英文片名 → OMDb `t=&y=` 查詢 → 失敗去 `y` 重試 → 結果快取 30 天 → miss 時 fallback（無海報照樣開始討論）。成功後建立 session（TTL 48h）。
+`omdb.js alignAndFetch`：Gemini JSON 判斷輸入是否為合理電影名稱（`recognized`）→ 對齊英文片名 → OMDb `t=&y=` 查詢 → 失敗去 `y` 重試 → 結果快取 30 天。輸入不像電影名稱、或 OMDb 查無資料時一律視為 `omdbMiss`，只回警告訊息、不建立 session、不開始討論；成功則建立 session（TTL 48h）。
 
 ### `/generate` 三段鏈（ack-then-process）
 
@@ -76,13 +75,13 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 ## api/_lib 職責一覽
 
 - `redis.js` — Upstash client 單例（`UPSTASH_REDIS_REST_*`，fallback `KV_REST_API_*`）
-- `telegram-api.js` — `tg()` 泛用呼叫；`sendMessage`（Markdown 失敗自動降級純文字、>4096 自動切段）、`sendChatAction`、`sendPhoto`、`getFileBuffer`
-- `gemini.js` — `chatReply`（辯論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）、`transcribeAudio`（語音）
+- `telegram-api.js` — `tg()` 泛用呼叫；`sendMessage`（Markdown 失敗自動降級純文字、>4096 自動切段）、`sendChatAction`、`sendPhoto`
+- `gemini.js` — `chatReply`（辯論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）
 - `omdb.js` — `alignAndFetch(中文片名)`：Gemini JSON 對齊 → OMDb `t=&y=` → 去 `y` 重試 → 快取 → miss fallback
 - `session.js` / `reviews.js` — Redis CRUD
 - `prompts.js` — 影評人 persona + Stage A/B/C prompt 模板
 - `debate.js` — `runDebateEngine`：A 盲點挖掘 → B 論點對撞 → C 風格重塑 → saveReview → 送 digest → 清 session
-- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/cancel` `/list`）、語音轉寫、辯論回合。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
+- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/cancel` `/list`）、辯論回合。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
 
 ## 技術棧
 

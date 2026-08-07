@@ -58,10 +58,3 @@ export function sendChatAction(chatId, action = 'typing') {
 export function sendPhoto(chatId, photoUrl, caption) {
   return tg('sendPhoto', { chat_id: chatId, photo: photoUrl, caption })
 }
-
-export async function getFileBuffer(fileId) {
-  const file = await tg('getFile', { file_id: fileId })
-  const res = await fetch(`${API_BASE}/file/bot${token()}/${file.file_path}`)
-  if (!res.ok) throw new Error(`Telegram 檔案下載失敗：HTTP ${res.status}`)
-  return Buffer.from(await res.arrayBuffer())
-}
