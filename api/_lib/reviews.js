@@ -11,3 +11,8 @@ export async function listReviews() {
   const rows = await redis().mget(...ids.map(id => `review:${id}`))
   return rows.filter(Boolean)
 }
+
+export async function deleteReview(id) {
+  await redis().del(`review:${id}`)
+  await redis().lrem('reviews:ids', 0, id)
+}

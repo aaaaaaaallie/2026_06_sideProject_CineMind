@@ -128,6 +128,24 @@ export const useReviewsStore = defineStore('reviews', {
       }
     },
 
+    async deleteReview(id) {
+      try {
+        const res = await fetch(`/api/reviews?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${this.token}` },
+        })
+        if (res.status === 401) {
+          this.logout()
+          this.error = 'Token 已失效，請重新輸入'
+          return
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        this.reviews = this.reviews.filter(r => r.id !== id)
+      } catch {
+        this.error = '刪除失敗，請稍後再試'
+      }
+    },
+
     logout() {
       this.token = ''
       this.reviews = []

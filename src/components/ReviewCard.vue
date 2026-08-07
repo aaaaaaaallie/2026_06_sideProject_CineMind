@@ -1,12 +1,22 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { marked } from 'marked'
+import { useReviewsStore } from '@/stores/reviews.js'
 
 const props = defineProps({
   review: { type: Object, required: true },
 })
 
+const store = useReviewsStore()
 const open = ref(false)
+const deleting = ref(false)
+
+async function handleDelete() {
+  if (!window.confirm(`確定要刪除《${props.review.movieTitleZh}》這篇歸檔嗎？此動作無法復原。`)) return
+  deleting.value = true
+  await store.deleteReview(props.review.id)
+  deleting.value = false
+}
 
 const dateLabel = computed(() => {
   if (!props.review.createdAt) return ''
@@ -52,6 +62,17 @@ const digestHtml = computed(() => (open.value ? marked.parse(props.review.digest
       <span class="shrink-0 text-neutral-500 text-xs transition-transform" :class="{ 'rotate-180': open }" aria-hidden="true">▼</span>
     </button>
 
-    <div v-if="open" class="digest-prose border-t border-neutral-800 px-4 py-3" v-html="digestHtml" />
+    <div v-if="open" class="border-t border-neutral-800">
+      <div class="digest-prose px-4 py-3" v-html="digestHtml" />
+      <div class="px-4 pb-3 flex justify-end">
+        <button
+          class="text-xs text-red-400/80 hover:text-red-400 transition-colors disabled:opacity-50"
+          :disabled="deleting"
+          @click="handleDelete"
+        >
+          {{ deleting ? '刪除中…' : '🗑 刪除這篇' }}
+        </button>
+      </div>
+    </div>
   </article>
 </template>
