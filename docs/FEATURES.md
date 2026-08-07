@@ -8,7 +8,7 @@
 | Phase 1 | Bot 後端閉環 | ✅ 完成 |
 | Phase 2 | Dashboard（TokenGate、年份 Accordion、genre 篩選、純 CSS 圖表） | ✅ 完成 |
 | Phase 3a | 憑證串接與 bot 品質修正（8 個環境變數實測、model 名稱修正、額度降級鏈、新片討論、語氣調校） | ✅ 完成（見 `docs/plans/archive/2026-07-24-phase3a-憑證串接與bot品質修正.md`） |
-| Phase 3b | 本機驗證與部署上線（TESTING.md 全清單、Vercel 部署、webhook 綁定） | ⬜ 進行中（見 `docs/plans/2026-07-24-phase3b-本機驗證與部署上線.md`） |
+| Phase 3b | 本機驗證與部署上線（Vercel 部署、webhook 綁定、主線功能驗證） | ✅ 完成（見 `docs/plans/archive/2026-07-24-phase3b-本機驗證與部署上線.md`） |
 
 ## Bot 功能（Phase 1，✅）
 
