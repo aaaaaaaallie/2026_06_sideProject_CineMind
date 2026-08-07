@@ -101,6 +101,10 @@ async function handleMovie(chatId, rawTitle) {
     return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
   }
 
+  if (movie.omdbMiss) {
+    return sendMessage(chatId, `⚠️ OMDb 查無《${title}》這部片，請確認片名後再試一次 /movie。`)
+  }
+
   const session = {
     movieTitleZh: title,
     movieTitleEn: movie.title,
@@ -121,7 +125,6 @@ async function handleMovie(chatId, rawTitle) {
   await sendMessage(chatId, [
     `🎬 *${title}*（${movie.title}, ${movie.year}）`,
     movie.genres.length ? `類型：${movie.genres.join(' / ')}` : null,
-    movie.omdbMiss ? '⚠️ OMDb 查無此片，僅以 AI 對齊資料建立討論。' : null,
     '',
     '討論開始，直接說出你的看法吧。想收尾時用 /generate。',
   ].filter(v => v !== null).join('\n'))
