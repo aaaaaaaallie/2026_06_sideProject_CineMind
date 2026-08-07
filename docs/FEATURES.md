@@ -37,7 +37,7 @@
 - 三段鏈（開 thinking budget）：
   - **Stage A 盲點挖掘**：找出討論中沒被觸及的面向。
   - **Stage B 論點對撞**：把使用者觀點與反方觀點正面對撞。
-  - **Stage C 風格重塑**：整合成一篇有個人風格的結構化影評。
+  - **Stage C 風格重塑**：整合成一篇有個人風格的結構化影評，標題下方先帶一段 OMDb 官方劇情簡介（查無資料則略過），prompt 內建避免 AI 腔的規則（罐頭收尾、空話立場、浮誇拔高詞等）。
 - 完成後歸檔為 review JSON（無 TTL）、送 digest、清除 session。
 
 ### `/list`
@@ -56,7 +56,8 @@
 
 ## Reviews API（Phase 1，✅）
 
-`GET /api/reviews` — Bearer `DASHBOARD_TOKEN` 驗證，回傳歸檔 reviews，供 Dashboard 使用。
+- `GET /api/reviews` — Bearer `DASHBOARD_TOKEN` 驗證，回傳歸檔 reviews，供 Dashboard 使用。
+- `DELETE /api/reviews?id=` — 同一組 Bearer 驗證，刪除指定 id 的 review（同步移除 Redis 的資料與索引）。
 
 ## Dashboard（Phase 2，✅）
 
@@ -66,4 +67,5 @@
 - **年份 Accordion**：依上映年份分組（新→舊），組內依歸檔時間排序；每筆收合列顯示海報縮圖（無海報以 🎬 佔位）、中英片名、genre 標籤、字數、歸檔日期，點開以 `marked` 渲染完整 digest。
 - **多維度篩選**：年份下拉選單 + genre 橫向滾動 chips（可多選，OR 邏輯；與年份為 AND）；顯示「符合/總數」並可一鍵清除。
 - **純 CSS 統計**：KPI 卡（影評數、總字數、平均字數、涵蓋年份）+ 類型分佈條（單色相水平條，超過 8 類折進「其他」），隨篩選條件連動。
+- **刪除歸檔**：卡片展開後可見刪除按鈕，二次確認後呼叫 `DELETE /api/reviews`，成功即從畫面移除。
 - 空狀態 / 載入中 / 錯誤重試畫面。
