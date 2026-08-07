@@ -57,6 +57,7 @@
 
 - `GET /api/reviews` — Bearer `DASHBOARD_TOKEN` 驗證，回傳歸檔 reviews，供 Dashboard 使用。
 - `DELETE /api/reviews?id=` — 同一組 Bearer 驗證，刪除指定 id 的 review（同步移除 Redis 的資料與索引）。
+- `PATCH /api/reviews?id=` — 同一組 Bearer 驗證，更新指定 id 的 `movieTitleZh`／`note`（白名單欄位，其他欄位不可透過此 API 修改）；`movieTitleZh` 第一次被改動時會把原始值存進 `movieTitleZhOriginal` 供還原。
 
 ## Dashboard（Phase 2，✅）
 
@@ -67,4 +68,5 @@
 - **多維度篩選**：年份下拉選單 + genre 橫向滾動 chips（可多選，OR 邏輯；與年份為 AND）；顯示「符合/總數」並可一鍵清除。
 - **純 CSS 統計**：KPI 卡（影評數、總字數、平均字數、涵蓋年份）+ 類型分佈條（單色相水平條，超過 8 類折進「其他」），隨篩選條件連動。
 - **刪除歸檔**：卡片展開後可見刪除按鈕，二次確認後呼叫 `DELETE /api/reviews`，成功即從畫面移除。
+- **編輯片名與備註**：卡片展開後可編輯中文片名與備註（`PATCH /api/reviews`）；片名第一次被改動時保留原始值，編輯畫面可一鍵還原。
 - 空狀態 / 載入中 / 錯誤重試畫面。

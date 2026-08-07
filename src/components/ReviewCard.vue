@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { marked } from 'marked'
 import { useReviewsStore } from '@/stores/reviews.js'
 
@@ -10,12 +10,35 @@ const props = defineProps({
 const store = useReviewsStore()
 const open = ref(false)
 const deleting = ref(false)
+const editing = ref(false)
+const saving = ref(false)
+const form = reactive({ movieTitleZh: '', note: '' })
 
 async function handleDelete() {
   if (!window.confirm(`確定要刪除《${props.review.movieTitleZh}》這篇歸檔嗎？此動作無法復原。`)) return
   deleting.value = true
   await store.deleteReview(props.review.id)
   deleting.value = false
+}
+
+function startEdit() {
+  form.movieTitleZh = props.review.movieTitleZh
+  form.note = props.review.note ?? ''
+  editing.value = true
+}
+
+function resetTitle() {
+  if (props.review.movieTitleZhOriginal) form.movieTitleZh = props.review.movieTitleZhOriginal
+}
+
+async function saveEdit() {
+  saving.value = true
+  await store.updateReview(props.review.id, {
+    movieTitleZh: form.movieTitleZh.trim(),
+    note: form.note.trim(),
+  })
+  saving.value = false
+  editing.value = false
 }
 
 const dateLabel = computed(() => {
@@ -63,16 +86,55 @@ const digestHtml = computed(() => (open.value ? marked.parse(props.review.digest
     </button>
 
     <div v-if="open" class="border-t border-neutral-800">
-      <div class="digest-prose px-4 py-3" v-html="digestHtml" />
-      <div class="px-4 pb-3 flex justify-end">
+      <div v-if="editing" class="flex flex-col gap-2 px-4 py-3">
+        <label class="text-xs text-neutral-400">
+          片名
+          <input
+            v-model="form.movieTitleZh"
+            class="mt-1 w-full rounded bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100"
+          >
+        </label>
         <button
-          class="text-xs text-red-400/80 hover:text-red-400 transition-colors disabled:opacity-50"
-          :disabled="deleting"
-          @click="handleDelete"
+          v-if="review.movieTitleZhOriginal"
+          class="self-start text-[11px] text-neutral-500 underline hover:text-neutral-300"
+          @click="resetTitle"
         >
-          {{ deleting ? '刪除中…' : '🗑 刪除這篇' }}
+          還原為原始片名《{{ review.movieTitleZhOriginal }}》
         </button>
+        <label class="text-xs text-neutral-400">
+          備註
+          <textarea
+            v-model="form.note"
+            rows="3"
+            class="mt-1 w-full rounded bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100"
+          />
+        </label>
+        <div class="flex justify-end gap-3 pt-1">
+          <button class="text-xs text-neutral-400 hover:text-neutral-200" @click="editing = false">取消</button>
+          <button
+            class="text-xs text-emerald-400 hover:text-emerald-300 disabled:opacity-50"
+            :disabled="saving"
+            @click="saveEdit"
+          >
+            {{ saving ? '儲存中…' : '儲存' }}
+          </button>
+        </div>
       </div>
+
+      <template v-else>
+        <p v-if="review.note" class="whitespace-pre-wrap px-4 pt-3 text-sm text-neutral-300">📝 {{ review.note }}</p>
+        <div class="digest-prose px-4 py-3" v-html="digestHtml" />
+        <div class="flex justify-end gap-3 px-4 pb-3">
+          <button class="text-xs text-neutral-400 hover:text-neutral-200" @click="startEdit">✏️ 編輯</button>
+          <button
+            class="text-xs text-red-400/80 hover:text-red-400 transition-colors disabled:opacity-50"
+            :disabled="deleting"
+            @click="handleDelete"
+          >
+            {{ deleting ? '刪除中…' : '🗑 刪除這篇' }}
+          </button>
+        </div>
+      </template>
     </div>
   </article>
 </template>

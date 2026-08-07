@@ -6,6 +6,7 @@
 
 ### Added
 
+- Dashboard 新增編輯歸檔影評功能：可編輯中文片名與新增備註（`PATCH /api/reviews?id=`），片名第一次被改動時保留原始值（`movieTitleZhOriginal`），編輯畫面可一鍵還原。(2026-08-07)
 - Dashboard 新增刪除歸檔影評功能：`DELETE /api/reviews?id=`（同一組 `DASHBOARD_TOKEN` 驗證）+ 前端二次確認刪除。(2026-08-07)
 - `/generate` 文章標題下方新增劇情簡介段落：引用 OMDb 官方劇情/導演/主演資料改寫成 2–3 句客觀簡介，查無官方資料時自動略過，不讓 AI 編劇情。(2026-08-07)
 - Gemini model 自動降級鏈（`api/_lib/gemini.js` 的 `withFallback`）：實測發現這個新專案 `gemini-3.5-flash` 免費層每日僅 20 次額度（遠低於公開文件的 250–1,500 次），額度用完時原本會直接失敗。改為額度錯誤（429/RESOURCE_EXHAUSTED）時自動改用 `gemini-3.1-flash-lite`（獨立配額），非額度錯誤則照舊直接拋出，不做無意義的重試。(2026-07-24)

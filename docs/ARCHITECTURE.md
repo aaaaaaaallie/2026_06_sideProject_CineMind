@@ -68,7 +68,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 |---|---|---|
 | `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給辯論 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片 |
 | `reviews:ids` | List | review id 列表（LPUSH，新到舊） |
-| `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL |
+| `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleZhOriginal?, note?, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL。`movieTitleZhOriginal`/`note` 為 Dashboard 編輯功能新增的選填欄位 |
 | `omdb:title:{en}:{year}` / `omdb:{imdbID}` | JSON | OMDb 快取，TTL 30 天 |
 | `tg:update:{update_id}` | flag | 冪等鎖，TTL 300s |
 

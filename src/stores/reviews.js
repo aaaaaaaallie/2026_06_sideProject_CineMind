@@ -146,6 +146,30 @@ export const useReviewsStore = defineStore('reviews', {
       }
     },
 
+    async updateReview(id, patch) {
+      try {
+        const res = await fetch(`/api/reviews?id=${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(patch),
+        })
+        if (res.status === 401) {
+          this.logout()
+          this.error = 'Token 已失效，請重新輸入'
+          return
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const i = this.reviews.findIndex(r => r.id === id)
+        if (i !== -1) this.reviews[i] = data.review
+      } catch {
+        this.error = '更新失敗，請稍後再試'
+      }
+    },
+
     logout() {
       this.token = ''
       this.reviews = []
