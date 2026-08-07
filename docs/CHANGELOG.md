@@ -24,6 +24,7 @@
 
 ### Fixed
 
+- `/movie` 打亂碼或明顯不是電影名稱的字串，仍會進入討論：`alignAndFetch` 原本強制 Gemini 一定要回一個英文片名，導致亂碼也被硬湊成某部真實電影。新增 `recognized` 判斷欄位，Gemini 認為輸入不合理時直接視為查無此片，不呼叫 OMDb、不開始討論。(2026-08-07)
 - 正式環境 webhook 完全無回應（含 `/start` 這種不碰 Redis 的指令）：追查發現 Vercel 上的 `TELEGRAM_BOT_TOKEN` 環境變數前面多了一個空白字元，導致 Telegram 回 404 Not Found；修正後完成首次正式部署與 webhook 綁定。(2026-08-07)
 - `/movie` 與日常辯論遇到 Gemini 額度/頻率限制（429）時原本會靜默失敗（webhook 回 200 但使用者什麼訊息都收不到）。新增 `isQuotaError`（`gemini.js`）判斷與 `aiErrorMessage` 提示，失敗時回覆使用者「AI 額度暫時用完了」等訊息，而非已讀不回。(2026-07-24)
 - `api/_lib/gemini.js` 的 `MODEL` 常數過期導致所有 AI 功能（辯論、三段鏈、語音轉寫、片名對齊）在新 API key 上完全無法呼叫。(2026-07-24)
