@@ -1,6 +1,6 @@
 import { redis } from './redis.js'
 import { sendMessage, sendChatAction, sendPhoto } from './telegram-api.js'
-import { chatReply, isQuotaError } from './gemini.js'
+import { chatReply, isQuotaError, isOverloadedError } from './gemini.js'
 import { alignAndFetch } from './omdb.js'
 import { getSession, setSession, clearSession } from './session.js'
 import { listReviews } from './reviews.js'
@@ -57,6 +57,9 @@ export async function handleUpdate(update, { waitUntil = p => p } = {}) {
 function aiErrorMessage(err) {
   if (isQuotaError(err)) {
     return '⚠️ AI 額度暫時用完了（免費層有每日上限），晚點再試一次看看。'
+  }
+  if (isOverloadedError(err)) {
+    return '⚠️ AI 服務忙線中（Google 那邊暫時滿載），過幾分鐘再試一次。'
   }
   return '⚠️ AI 暫時出了點問題，稍後再試一次。'
 }

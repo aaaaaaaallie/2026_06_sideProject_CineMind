@@ -29,6 +29,7 @@
 
 ### Fixed
 
+- Gemini 降級鏈（`gemini.js` 的 `withFallback`）原本只在額度錯誤（429）時換 model，遇到 503 UNAVAILABLE（"This model is currently experiencing high demand"）會直接拋出，使用者只收到「AI 暫時出了點問題」。實測 `gemini-3.5-flash` 持續回 503 的同時 `gemini-3.1-flash-lite` 完全正常，等於備援 model 明明可用卻沒被用到。改為 503/500 也納入降級條件（400/403/404 這類真正的 bug 仍直接拋出），並新增 `isOverloadedError` 讓 `bot.js` 回「AI 服務忙線中」而非籠統的錯誤訊息。(2026-08-14)
 - `/movie` 打亂碼或明顯不是電影名稱的字串，仍會進入討論：`alignAndFetch` 原本強制 Gemini 一定要回一個英文片名，導致亂碼也被硬湊成某部真實電影。新增 `recognized` 判斷欄位，Gemini 認為輸入不合理時直接視為查無此片，不呼叫 OMDb、不開始討論。(2026-08-07)
 - 正式環境 webhook 完全無回應（含 `/start` 這種不碰 Redis 的指令）：追查發現 Vercel 上的 `TELEGRAM_BOT_TOKEN` 環境變數前面多了一個空白字元，導致 Telegram 回 404 Not Found；修正後完成首次正式部署與 webhook 綁定。(2026-08-07)
 - `/movie` 與日常辯論遇到 Gemini 額度/頻率限制（429）時原本會靜默失敗（webhook 回 200 但使用者什麼訊息都收不到）。新增 `isQuotaError`（`gemini.js`）判斷與 `aiErrorMessage` 提示，失敗時回覆使用者「AI 額度暫時用完了」等訊息，而非已讀不回。(2026-07-24)

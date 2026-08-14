@@ -17,7 +17,16 @@ export function isQuotaError(err) {
   return /429|RESOURCE_EXHAUSTED/i.test(String(err))
 }
 
-// 依序嘗試 MODELS：非額度錯誤直接拋出（避免掩蓋真正的 bug）；額度錯誤才換下一個 model 重試
+// 服務端暫時性錯誤（503 UNAVAILABLE「high demand」、500 INTERNAL）。與額度無關，但同樣是「這個 model 現在
+// 用不了」，換下一個 model 就能救回來——實測 3.5-flash 穩定回 503 時，3.1-flash-lite 完全正常。
+export function isOverloadedError(err) {
+  const status = err?.status
+  if (typeof status === 'number') return status === 500 || status === 503
+  return /\b50[03]\b|UNAVAILABLE/i.test(String(err))
+}
+
+// 依序嘗試 MODELS：額度用完（429）或服務端暫時性錯誤（500/503）才換下一個 model；
+// 其餘錯誤（400 參數錯、403 金鑰錯、404 model 名稱錯等）直接拋出，避免掩蓋真正的 bug
 async function withFallback(call) {
   let lastErr
   for (const model of MODELS) {
@@ -25,7 +34,8 @@ async function withFallback(call) {
       return await call(model)
     } catch (err) {
       lastErr = err
-      if (!isQuotaError(err)) throw err
+      if (!isQuotaError(err) && !isOverloadedError(err)) throw err
+      console.warn(`Gemini ${model} 不可用（${err?.status ?? '?'}），改試下一個 model`)
     }
   }
   throw lastErr
