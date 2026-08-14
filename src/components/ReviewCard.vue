@@ -122,18 +122,21 @@ const digestHtml = computed(() => (open.value ? marked.parse(props.review.digest
       </div>
 
       <template v-else>
-        <p v-if="review.note" class="whitespace-pre-wrap px-4 pt-3 text-sm text-neutral-300">📝 {{ review.note }}</p>
-        <div class="digest-prose px-4 py-3" v-html="digestHtml" />
-        <div class="flex justify-end gap-3 px-4 pb-3">
-          <button class="text-xs text-neutral-400 hover:text-neutral-200" @click="startEdit">✏️ 編輯</button>
-          <button
-            class="text-xs text-red-400/80 hover:text-red-400 transition-colors disabled:opacity-50"
-            :disabled="deleting"
-            @click="handleDelete"
-          >
-            {{ deleting ? '刪除中…' : '🗑 刪除這篇' }}
-          </button>
+        <!-- 備註與操作同一排：沒有備註時 ms-auto 仍讓按鈕靠右 -->
+        <div class="flex items-start gap-3 px-4 pt-3">
+          <p v-if="review.note" class="min-w-0 whitespace-pre-wrap text-sm text-neutral-300">📝 {{ review.note }}</p>
+          <div class="ms-auto flex shrink-0 gap-3">
+            <button class="text-xs text-neutral-400 hover:text-neutral-200" @click="startEdit">✏️ 編輯</button>
+            <button
+              class="text-xs text-red-400/80 hover:text-red-400 transition-colors disabled:opacity-50"
+              :disabled="deleting"
+              @click="handleDelete"
+            >
+              {{ deleting ? '刪除中…' : '🗑 刪除這篇' }}
+            </button>
+          </div>
         </div>
+        <div class="digest-prose px-4 pt-2 pb-3" v-html="digestHtml" />
       </template>
     </div>
   </article>
