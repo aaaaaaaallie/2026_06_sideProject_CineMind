@@ -12,7 +12,8 @@ CineMind — 個人影視觀點工作台。閉環流程：**Telegram 對話 → 
 |---|---|
 | `npm run dev` | Vite 前端開發伺服器（僅前端，無 api/） |
 | `npm run dev:bot` | 本機 long-polling 跑 Telegram bot（免 tunnel，會自動 deleteWebhook） |
-| `npm run dev:full` | `vercel dev`：前端 + api/ functions 一起跑 |
+| `npm run dev:full` | `vercel dev`：前端 + api/ functions 一起跑（需全域安裝 vercel CLI） |
+| `npm run webhook:set` | 把 webhook 綁回正式站（`dev:bot` 測完必跑，否則線上沒人接訊息） |
 | `npm run build` | Vite 建置（部署由 Vercel 自動執行） |
 
 ## 關鍵規則（完整說明與 why 見 docs/DEVELOPMENT.md）

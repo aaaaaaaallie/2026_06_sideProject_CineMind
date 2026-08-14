@@ -36,7 +36,8 @@ api/
     ├── reviews.js     # review 歸檔 CRUD
     └── telegram-api.js# Bot API 封裝（sendMessage 等）
 scripts/
-└── dev-bot.js         # 本機 long-polling 開發模式（共用 bot.js）
+├── dev-bot.js         # 本機 long-polling 開發模式（共用 bot.js；啟動時 deleteWebhook）
+└── set-webhook.js     # npm run webhook:set：把 webhook 綁回正式站
 src/                   # Vue 3 前端（Phase 2 Dashboard）
 ├── App.vue
 ├── main.js

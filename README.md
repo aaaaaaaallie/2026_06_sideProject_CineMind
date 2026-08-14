@@ -31,10 +31,10 @@
 npm install
 npm run dev:bot    # 本機 long-polling 跑 bot（免 tunnel；會自動解除 webhook）
 npm run dev        # 前端 Dashboard
-npm run dev:full   # vercel dev：前端 + api/ 一起跑
+npm run dev:full   # vercel dev：前端 + api/ 一起跑（需另外全域安裝 vercel CLI）
 ```
 
-> `dev:bot` 會呼叫 `deleteWebhook`，本機測完部署後記得重新 setWebhook（下一節）。
+> `dev:bot` 會呼叫 `deleteWebhook`，**本機測完務必跑 `npm run webhook:set` 把線上接回來**（下一節）。忘了綁的話兩邊都沒人接訊息，bot 會完全沒反應。
 
 ## 部署
 
@@ -42,12 +42,15 @@ npm run dev:full   # vercel dev：前端 + api/ 一起跑
 vercel --prod
 ```
 
-綁定 webhook（`<SECRET>` 自產亂數，需與 Vercel 環境變數 `TELEGRAM_SECRET_TOKEN` 一致）：
+綁定 webhook（讀 `.env` 的 `PUBLIC_BASE_URL` 與 `TELEGRAM_SECRET_TOKEN`，綁完自動印出 `getWebhookInfo` 結果）：
 
 ```bash
-curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<app>.vercel.app/api/telegram&secret_token=<SECRET>&drop_pending_updates=true"
-curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"   # 確認 last_error_message 為空
+npm run webhook:set
+npm run webhook:set -- https://<其他網址>   # 臨時指定，例如 preview deployment
+npm run webhook:set -- --keep              # 保留佇列中的待處理訊息（預設丟棄）
 ```
+
+> `TELEGRAM_SECRET_TOKEN` 是自產亂數，**必須與 Vercel 環境變數裡的值一致**，否則 `api/telegram.js` 會把每個請求都擋成 401——症狀是 bot 完全沒反應，但 `getWebhookInfo` 的 `last_error_message` 會顯示原因。
 
 ## 架構與開發規範
 

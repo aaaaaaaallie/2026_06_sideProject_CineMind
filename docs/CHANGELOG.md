@@ -6,6 +6,7 @@
 
 ### Added
 
+- `npm run webhook:set`（`scripts/set-webhook.js`）：一行把 webhook 綁回正式站，網址讀 `.env` 新增的 `PUBLIC_BASE_URL`，也可用 `-- <網址>` 臨時指定、`-- --keep` 保留待處理訊息。`dev:bot` 啟動時會 `deleteWebhook`，過去測完得手動拼一長串 curl，忘記綁的話本機沒 polling、線上沒 webhook，bot 完全沒反應且毫無錯誤訊息可查——實際踩過一次。綁完會自動印 `getWebhookInfo`，`last_error_message` 有值時提示去對 Vercel 的 `TELEGRAM_SECRET_TOKEN`。(2026-08-14)
 - Dashboard 新增編輯歸檔影評功能：可編輯中文片名與新增備註（`PATCH /api/reviews?id=`），片名第一次被改動時保留原始值（`movieTitleZhOriginal`），編輯畫面可一鍵還原。(2026-08-07)
 - Dashboard 新增刪除歸檔影評功能：`DELETE /api/reviews?id=`（同一組 `DASHBOARD_TOKEN` 驗證）+ 前端二次確認刪除。(2026-08-07)
 - `/generate` 文章標題下方新增劇情簡介段落：引用 OMDb 官方劇情/導演/主演資料改寫成 2–3 句客觀簡介，查無官方資料時自動略過，不讓 AI 編劇情。(2026-08-07)

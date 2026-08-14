@@ -5,7 +5,8 @@
 ## 前置
 
 ```bash
-npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWebhook
+npm run dev:bot     # 會自動 deleteWebhook
+npm run webhook:set # 測完務必跑這行把 webhook 綁回正式站
 ```
 
 ## 驗證清單
@@ -49,7 +50,7 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 
 ## Dashboard
 
-需要 API 一起跑：`npm run dev:full`（vercel dev），或部署後直接在線上驗證。
+需要 API 一起跑：`npm run dev:full`（vercel dev，需全域安裝 vercel CLI），或部署後直接在線上驗證。
 
 ### TokenGate
 
