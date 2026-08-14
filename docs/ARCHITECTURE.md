@@ -2,7 +2,7 @@
 
 ## 系統架構
 
-閉環流程：**Telegram 對話 → AI（毒舌影評人）辯論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
+閉環流程：**Telegram 對話 → AI（中立影評人）討論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
 
 ```
 [Telegram Bot]（文字輸入）
@@ -26,7 +26,7 @@ api/
 ├── telegram.js        # Telegram webhook endpoint（Vercel Function）
 ├── reviews.js         # GET reviews API（Bearer token 保護，供 Dashboard 用）
 └── _lib/              # 共用模組（底線前綴 → Vercel 不當作 endpoint）
-    ├── bot.js         # handleUpdate：指令路由、白名單、冪等、辯論回合
+    ├── bot.js         # handleUpdate：指令路由、白名單、冪等、討論回合
     ├── debate.js      # runDebateEngine：/generate 三段鏈
     ├── gemini.js      # Gemini SDK 封裝
     ├── omdb.js        # 片名對齊 + OMDb 查詢/快取
@@ -45,11 +45,11 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 ## 資料流
 
-### 一般辯論回合
+### 一般討論回合
 
 1. Telegram 送 update 到 `api/telegram.js`，驗證 `X-Telegram-Bot-Api-Secret-Token`。
 2. `bot.js handleUpdate`：白名單檢查（`TELEGRAM_ALLOWED_CHAT_ID`）→ 冪等鎖（`tg:update:{update_id}`）→ 指令路由。
-3. 辯論文字進 `gemini.js chatReply`（thinking 0），history 寫回 session（上限 40 則）。
+3. 討論文字進 `gemini.js chatReply`（thinking 0），history 寫回 session（上限 40 則）。
 4. 回覆一律由 `telegram-api.js sendMessage` 主動送出；webhook 本身永遠回 `200 {}`。
 
 ### `/movie <片名>` 開始討論
@@ -66,7 +66,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 | Key | 型別 | 說明 |
 |---|---|---|
-| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給辯論 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片 |
+| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給影評人 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片 |
 | `reviews:ids` | List | review id 列表（LPUSH，新到舊） |
 | `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleZhOriginal?, note?, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL。`movieTitleZhOriginal`/`note` 為 Dashboard 編輯功能新增的選填欄位 |
 | `omdb:title:{en}:{year}` / `omdb:{imdbID}` | JSON | OMDb 快取，TTL 30 天 |
@@ -76,12 +76,12 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 - `redis.js` — Upstash client 單例（`UPSTASH_REDIS_REST_*`，fallback `KV_REST_API_*`）
 - `telegram-api.js` — `tg()` 泛用呼叫；`sendMessage`（Markdown 失敗自動降級純文字、>4096 自動切段）、`sendChatAction`、`sendPhoto`
-- `gemini.js` — `chatReply`（辯論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）
+- `gemini.js` — `chatReply`（討論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）
 - `omdb.js` — `alignAndFetch(中文片名)`：Gemini JSON 對齊 → OMDb `t=&y=` → 去 `y` 重試 → 快取 → miss fallback
 - `session.js` / `reviews.js` — Redis CRUD
 - `prompts.js` — 影評人 persona + Stage A/B/C prompt 模板
 - `debate.js` — `runDebateEngine`：A 盲點挖掘 → B 論點對撞 → C 風格重塑 → saveReview → 送 digest → 清 session
-- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/cancel` `/list`）、辯論回合。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
+- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/cancel` `/list`）、討論回合。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
 
 ## 技術棧
 

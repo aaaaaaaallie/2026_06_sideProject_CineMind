@@ -5,7 +5,7 @@
 ### Gemini
 
 - **SDK 用 `@google/genai`**，不是已棄停的 `@google/generative-ai`。
-- 日常辯論回覆必須 `thinkingConfig: { thinkingBudget: 0 }`——flash 模型預設會開 thinking，回覆會拖到 5–15s，辯論體驗直接毀掉。
+- 日常討論回覆必須 `thinkingConfig: { thinkingBudget: 0 }`——flash 模型預設會開 thinking，回覆會拖到 5–15s，討論體驗直接毀掉。
 - 只有 `/generate` 三段鏈（Stage A/B/C）開 thinking budget，品質優先於速度。
 - **免費層每個 model 的每日額度是分開算的**，且新專案的額度可能遠低於公開文件寫的數字（實測 `gemini-3.5-flash` 只有 20 次/天）。`gemini.js` 的 `MODELS` 陣列是降級鏈：主 model **額度用完（429/RESOURCE_EXHAUSTED）或服務端暫時性錯誤（503 UNAVAILABLE / 500 INTERNAL）**時自動換下一個 model；其餘錯誤（400 參數錯、403 金鑰錯、404 model 名稱錯）直接拋出，不做無意義重試。503「high demand」是 Google 端的暫時滿載，會持續一段時間且與額度無關，實測主 model 整段時間回 503 時備援 model 完全正常——這正是降級鏈存在的意義，不要把它縮回只認 429。新增/替換 model 前務必先用 `models?key=...` 的 ListModels 端點與最小 `generateContent` 呼叫實測，不要只憑 model 名稱猜測是否可用。
 - 呼叫 Gemini 可能因額度失敗，呼叫端（`bot.js`）要用 `isQuotaError()` 判斷並回使用者看得懂的提示，不能讓錯誤靜默吞掉。

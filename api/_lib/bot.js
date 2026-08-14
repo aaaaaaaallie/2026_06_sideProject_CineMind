@@ -66,11 +66,11 @@ function aiErrorMessage(err) {
 
 function handleStart(chatId) {
   return sendMessage(chatId, [
-    '🎬 *CineMind* — 你的毒舌影評辯論夥伴',
+    '🎬 *CineMind* — 你的影評討論夥伴',
     '',
     '/movie <片名> — 開始討論一部電影（中文片名即可）',
-    '直接打字 — 與影評人辯論',
-    '/generate — 把這場辯論煉成一篇影評歸檔',
+    '直接打字 — 與影評人討論',
+    '/generate — 把這場討論煉成一篇影評歸檔',
     '/list — 最近歸檔的影評',
     '/cancel — 放棄目前討論',
   ].join('\n'))
@@ -117,10 +117,10 @@ async function handleMovie(chatId, rawTitle) {
     '討論開始，直接說出你的看法吧。想收尾時用 /generate。',
   ].filter(v => v !== null).join('\n'))
 
-  // 讓影評人先開場挑釁；history 首則必須是 user role
+  // 讓影評人先開場；history 首則必須是 user role
   await sendChatAction(chatId)
   const openingUserMsg =
-    `我剛看完《${title}》（${movie.title}, ${movie.year}）。先別問我觀點，你先說：這部片最被高估或最被低估的一點是什麼？開戰吧。`
+    `我剛看完《${title}》（${movie.title}, ${movie.year}）。先別問我觀點，你先說：這部片你覺得最成功和最可惜的地方各是什麼？`
   let opening
   try {
     opening = await chatReply([{ role: 'user', text: openingUserMsg }], criticSystemPrompt(session))
@@ -142,7 +142,7 @@ async function handleDebateTurn(chatId, session, text) {
     await setSession(chatId, session)
     return sendMessage(chatId, reply)
   } catch (err) {
-    console.error('辯論回覆失敗：', err)
+    console.error('討論回覆失敗：', err)
     return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
   }
 }

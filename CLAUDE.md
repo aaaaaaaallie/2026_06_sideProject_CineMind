@@ -2,7 +2,7 @@
 
 ## 專案概述
 
-CineMind — 個人影視觀點工作台。閉環流程：**Telegram 對話 → AI（毒舌影評人）辯論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
+CineMind — 個人影視觀點工作台。閉環流程：**Telegram 對話 → AI（中立影評人）討論 → `/generate` 三段式觀點打造 → JSON 歸檔 → Vue Dashboard 可視化**。
 
 技術棧（全免費額度）：Telegram Bot + Vercel Functions + Gemini 3.5 Flash（`@google/genai`）+ OMDb + Upstash Redis + Vue 3 + Tailwind v4。
 
@@ -17,7 +17,7 @@ CineMind — 個人影視觀點工作台。閉環流程：**Telegram 對話 → 
 
 ## 關鍵規則（完整說明與 why 見 docs/DEVELOPMENT.md）
 
-- Gemini SDK 用 `@google/genai`；辯論回覆 `thinkingBudget: 0`，只有 `/generate` 三段鏈開 thinking。
+- Gemini SDK 用 `@google/genai`；討論回覆 `thinkingBudget: 0`，只有 `/generate` 三段鏈開 thinking。
 - `api/_lib/` 底線前綴不可改名（Vercel endpoint 排除機制）。
 - webhook 永遠回 `200 {}`；回覆一律 `sendMessage` 主動送。
 - `/generate` 用 ack-then-process（`waitUntil` 背景跑）。

@@ -19,10 +19,12 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 - [ ] `/cancel`：session 清除，之後打字會提示先 `/movie`。
 - [ ] `/list`：列出最近 5 筆歸檔影評；空清單時有合理提示。
 
-### 辯論
+### 討論
 
 - [ ] 無 session 時直接打字：提示先 `/movie`。
-- [ ] 有 session 時打字：AI 以毒舌影評人 persona 回覆，**數秒內回應**（若拖到 5–15s，檢查 `thinkingBudget: 0` 是否失效）。
+- [ ] 有 session 時打字：AI 以中立影評人 persona 回覆，**數秒內回應**（若拖到 5–15s，檢查 `thinkingBudget: 0` 是否失效）。
+- [ ] 語氣檢查：回覆同時講到優點與缺點、平和不嗆人；但也沒有用「各有優缺點」「因人而異」打太極（該表態時仍要表態）。
+- [ ] 刻意講一個很薄弱的觀點：AI 平實指出論證問題並給理由，不嘲諷、不反問攻擊。
 - [ ] 連續多輪：AI 記得前文脈絡（history 有寫入 session）。
 
 ### `/generate` 三段鏈
@@ -43,7 +45,7 @@ npm run dev:bot   # 會自動 deleteWebhook；測完部署後記得重新 setWeb
 
 - [ ] `setWebhook` 帶 `secret_token` 後，`getWebhookInfo` 的 `last_error_message` 為空。
 - [ ] 帶錯誤 secret header 打 `/api/telegram`：被拒絕（但仍回 200 空體，不觸發重送）。
-- [ ] 線上跑一輪完整流程：`/movie` → 辯論 → `/generate` → `/list`。
+- [ ] 線上跑一輪完整流程：`/movie` → 討論 → `/generate` → `/list`。
 
 ## Dashboard
 

@@ -41,7 +41,7 @@ async function withFallback(call) {
   throw lastErr
 }
 
-// 日常辯論：thinkingBudget 0 壓延遲（flash 預設 thinking 會拖到 5–15s）
+// 日常討論：thinkingBudget 0 壓延遲（flash 預設 thinking 會拖到 5–15s）
 export function chatReply(history, systemInstruction) {
   return withFallback(async model => {
     const res = await ai().models.generateContent({
