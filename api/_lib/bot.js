@@ -69,6 +69,7 @@ function handleStart(chatId) {
     '🎬 *CineMind* — 你的影評討論夥伴',
     '',
     '/movie <片名> — 開始討論一部電影（中文片名即可）',
+    '　查無此片時可補充英文片名/年份：/movie 大濛, Op O, 2023',
     '直接打字 — 與影評人討論',
     '/generate — 把這場討論煉成一篇影評歸檔',
     '/list — 最近歸檔的影評',
@@ -77,20 +78,22 @@ function handleStart(chatId) {
 }
 
 async function handleMovie(chatId, rawTitle) {
-  const title = rawTitle.trim().replace(/^《/, '').replace(/》$/, '')
-  if (!title) return sendMessage(chatId, '請帶上片名，例如：/movie 寄生上流')
+  // 逗號補充英文片名/年份可提高 OMDb 命中率：/movie 片名, 英文片名, 年份（後兩欄可留空）
+  const [titlePart, enPart, yearPart] = rawTitle.split(/[,，]/).map(s => s?.trim())
+  const title = (titlePart ?? '').replace(/^《/, '').replace(/》$/, '')
+  if (!title) return sendMessage(chatId, '請帶上片名，例如：/movie 寄生上流，或補充英文片名/年份：/movie 大濛, Op O, 2023')
 
   await sendChatAction(chatId)
   let movie
   try {
-    movie = await alignAndFetch(title)
+    movie = await alignAndFetch(title, { englishTitle: enPart || null, year: yearPart || null })
   } catch (err) {
     console.error('/movie 片名對齊失敗：', err)
     return sendMessage(chatId, aiErrorMessage(err)).catch(() => {})
   }
 
   if (movie.omdbMiss) {
-    return sendMessage(chatId, `⚠️ OMDb 查無《${title}》這部片，請確認片名後再試一次 /movie。`)
+    return sendMessage(chatId, `⚠️ OMDb 查無《${title}》這部片，請確認片名後再試一次 /movie（可補充英文片名/年份，例如 /movie ${title}, English Title, 2023）。`)
   }
 
   const session = {
