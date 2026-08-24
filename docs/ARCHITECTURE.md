@@ -55,7 +55,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 ### `/movie <片名>` 開始討論
 
-`omdb.js alignAndFetch`：Gemini JSON 判斷輸入是否為合理電影名稱（`recognized`）→ 對齊英文片名 → OMDb `t=&y=` 查詢 → 失敗去 `y` 重試 → 結果快取 30 天。輸入不像電影名稱、或 OMDb 查無資料時一律視為 `omdbMiss`，只回警告訊息、不建立 session、不開始討論；成功則建立 session（TTL 48h）。
+`omdb.js alignAndFetch(zhTitle, hint?)`：可用逗號補充英文片名/年份提高命中率（`/movie 片名, 英文片名, 年份`）。有 `hint.englishTitle` 時完全跳過 Gemini、直接查 OMDb；否則走 Gemini JSON 判斷輸入是否為合理電影名稱（`recognized`，有 `hint.year` 時把年份線索塞進 prompt 輔助消歧）→ 對齊英文片名。查 OMDb `t=&y=`（年份優先採用使用者給的值）→ 失敗去 `y` 重試 → 結果快取 30 天。輸入不像電影名稱、或 OMDb 查無資料時一律視為 `omdbMiss`，只回警告訊息、不建立 session、不開始討論；成功則建立 session（TTL 48h）。
 
 ### `/generate` 三段鏈（ack-then-process）
 
@@ -78,7 +78,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 - `redis.js` — Upstash client 單例（`UPSTASH_REDIS_REST_*`，fallback `KV_REST_API_*`）
 - `telegram-api.js` — `tg()` 泛用呼叫；`sendMessage`（Markdown 失敗自動降級純文字、>4096 自動切段）、`sendChatAction`、`sendPhoto`
 - `gemini.js` — `chatReply`（討論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）
-- `omdb.js` — `alignAndFetch(中文片名)`：Gemini JSON 對齊 → OMDb `t=&y=` → 去 `y` 重試 → 快取 → miss fallback
+- `omdb.js` — `alignAndFetch(中文片名, hint?)`：有 `hint.englishTitle` 跳過 Gemini 直查 OMDb；否則 Gemini JSON 對齊（`hint.year` 輔助消歧）→ OMDb `t=&y=` → 去 `y` 重試 → 快取 → miss fallback
 - `session.js` / `reviews.js` — Redis CRUD
 - `prompts.js` — 影評人 persona + Stage A/B/C prompt 模板
 - `debate.js` — `runDebateEngine`：A 盲點挖掘 → B 論點對撞 → C 風格重塑 → saveReview → 送 digest → 清 session
