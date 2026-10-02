@@ -6,6 +6,7 @@
 
 ### Added
 
+- Redis keepalive Cron（`api/cron-keepalive.js`，`vercel.json` 的 `crons`）：每週一、四 03:00 UTC 寫一筆 `cron:keepalive`。Upstash 免費資料庫連續 14 天沒有指令會被自動刪除，實際發生過一次：原本的資料庫被刪掉後，`/api/reviews` 回 500，Dashboard 打不開，bot 也跟著失效，最後是用 Upstash 刪除前留下的備份 migrate 到新資料庫，才把 7 筆影評救回來。排程用 `CRON_SECRET` 驗證，Vercel Cron 會自動帶上這個 header。(2026-10-02)
 - `/movie` 支援逗號補充英文片名/年份（`/movie 片名, 英文片名, 年份`，後兩欄可留空）：實測發現片名籠統或有多部同名作品時，Gemini 光靠中文片名猜英文片名/年份常猜錯，導致 OMDb 查無。有給英文片名時直接查 OMDb、完全跳過 Gemini 猜測；只給年份時把線索塞進 Gemini prompt 輔助消歧，且最終查詢優先採用使用者給的年份。(2026-08-24)
 - `npm run webhook:set`（`scripts/set-webhook.js`）：一行把 webhook 綁回正式站，網址讀 `.env` 新增的 `PUBLIC_BASE_URL`，也可用 `-- <網址>` 臨時指定、`-- --keep` 保留待處理訊息。`dev:bot` 啟動時會 `deleteWebhook`，過去測完得手動拼一長串 curl，忘記綁的話本機沒 polling、線上沒 webhook，bot 完全沒反應且毫無錯誤訊息可查——實際踩過一次。綁完會自動印 `getWebhookInfo`，`last_error_message` 有值時提示去對 Vercel 的 `TELEGRAM_SECRET_TOKEN`。(2026-08-14)
 - Dashboard 新增編輯歸檔影評功能：可編輯中文片名與新增備註（`PATCH /api/reviews?id=`），片名第一次被改動時保留原始值（`movieTitleZhOriginal`），編輯畫面可一鍵還原。(2026-08-07)

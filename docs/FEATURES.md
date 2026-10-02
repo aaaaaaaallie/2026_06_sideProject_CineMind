@@ -60,6 +60,10 @@
 - `DELETE /api/reviews?id=` — 同一組 Bearer 驗證，刪除指定 id 的 review（同步移除 Redis 的資料與索引）。
 - `PATCH /api/reviews?id=` — 同一組 Bearer 驗證，更新指定 id 的 `movieTitleZh`／`note`（白名單欄位，其他欄位不可透過此 API 修改）；`movieTitleZh` 第一次被改動時會把原始值存進 `movieTitleZhOriginal` 供還原。
 
+## Redis keepalive Cron（✅）
+
+- `GET /api/cron-keepalive` — 由 Vercel Cron 每週一、四 03:00 UTC 觸發，驗證 `Authorization: Bearer ${CRON_SECRET}` 後寫入 `cron:keepalive`。Upstash 免費資料庫連續 14 天沒有指令會被自動刪除，這支排程確保就算一陣子沒用 bot 和 Dashboard，資料庫也不會消失。
+
 ## Dashboard（Phase 2，✅）
 
 深色主題、行動端優先的高資訊密度後台（`src/App.vue` + `src/components/` + `src/stores/reviews.js`）：

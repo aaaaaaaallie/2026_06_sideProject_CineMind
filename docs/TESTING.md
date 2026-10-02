@@ -38,6 +38,11 @@ npm run webhook:set # 測完務必跑這行把 webhook 綁回正式站
 - [ ] digest 包含三段結構（盲點/對撞/重塑）且 Markdown 正常顯示。
 - [ ] 完成後 session 已清除（再打字會提示 `/movie`）。
 - [ ] `/list` 能看到剛歸檔的影評。
+
+### Redis keepalive Cron
+
+- [ ] Vercel 專案 Settings → Cron Jobs 看得到 `/api/cron-keepalive`（`0 3 * * 1,4`），按 Run 手動觸發後 log 無錯誤。
+- [ ] 不帶 token 或帶錯的 token 呼叫 `/api/cron-keepalive`：回 401。
 - [ ] 超長 digest（>4096 字）自動切段送出。
 
 ### 安全與冪等

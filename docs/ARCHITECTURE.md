@@ -25,6 +25,7 @@
 api/
 ├── telegram.js        # Telegram webhook endpoint（Vercel Function）
 ├── reviews.js         # GET reviews API（Bearer token 保護，供 Dashboard 用）
+├── cron-keepalive.js  # Vercel Cron（每週一、四）寫 Redis，防止 Upstash 免費庫閒置 14 天被刪
 └── _lib/              # 共用模組（底線前綴 → Vercel 不當作 endpoint）
     ├── bot.js         # handleUpdate：指令路由、白名單、冪等、討論回合
     ├── debate.js      # runDebateEngine：/generate 三段鏈
@@ -72,6 +73,7 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 | `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleZhOriginal?, note?, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL。`movieTitleZhOriginal`/`note` 為 Dashboard 編輯功能新增的選填欄位 |
 | `omdb:title:{en}:{year}` / `omdb:{imdbID}` | JSON | OMDb 快取，TTL 30 天 |
 | `tg:update:{update_id}` | flag | 冪等鎖，TTL 300s |
+| `cron:keepalive` | string | 最近一次 keepalive cron 執行時間（ISO），無 TTL。存在的目的只是讓資料庫定期有指令進來 |
 
 ## api/_lib 職責一覽
 
