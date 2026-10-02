@@ -19,5 +19,5 @@ Upstash 免費資料庫連續 14 天沒有任何指令就會被自動刪除。20
 
 - [x] 本機帶正確 Bearer 呼叫 handler 回 200，Redis 的 `cron:keepalive` 有更新。
 - [x] 不帶 token 或 token 錯誤回 401，也不會寫入 Redis。
-- [ ] 部署後 Vercel 專案 Settings → Cron Jobs 看得到 `/api/cron-keepalive`，排程是 `0 3 * * 1,4`。
-- [ ] 在 Cron Jobs 頁按 Run 手動觸發一次，log 沒有錯誤，`cron:keepalive` 的時間有更新。
+- [x] 部署後 Vercel 專案 Settings → Cron Jobs 看得到 `/api/cron-keepalive`，排程是 `0 3 * * 1,4`。
+- [x] 在 Cron Jobs 頁按 Run 手動觸發一次，log 沒有錯誤，`cron:keepalive` 的時間有更新。
