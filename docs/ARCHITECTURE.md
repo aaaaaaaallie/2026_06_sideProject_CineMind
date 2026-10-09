@@ -28,7 +28,7 @@ api/
 ├── cron-keepalive.js  # Vercel Cron（每週一、四）寫 Redis，防止 Upstash 免費庫閒置 14 天被刪
 └── _lib/              # 共用模組（底線前綴 → Vercel 不當作 endpoint）
     ├── bot.js         # handleUpdate：指令路由、白名單、冪等、討論回合
-    ├── debate.js      # runDebateEngine：/generate 三段鏈
+    ├── debate.js      # /generate 三段鏈產草稿、草稿修改、/save 歸檔
     ├── gemini.js      # Gemini SDK 封裝
     ├── omdb.js        # 片名對齊 + OMDb 查詢/快取
     ├── prompts.js     # 影評人 persona + Stage A/B/C prompt 模板
@@ -62,13 +62,18 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 1. 先 `sendMessage` ack → `waitUntil()`（`@vercel/functions`）背景執行。
 2. `debate.js runDebateEngine`：Stage A 盲點挖掘 → Stage B 論點對撞 → Stage C 風格重塑（三段鏈開 thinking budget）。
-3. `saveReview` 歸檔 → 送 digest 給使用者 → 清 session。
+3. 結果存進 `session.draft`（**不歸檔**）→ 送草稿給使用者。
+4. 有草稿時打字 = 修改意見：ack → `waitUntil(reviseDraft)`，只跑一次 `revisePrompt`（沿用草稿的盲點/對撞，thinking 1024）覆蓋 `draft.digest`。
+5. `/save` → `saveDraft`：`saveReview` 歸檔 → 清 session。`/back` 刪掉 `draft` 回討論模式。
+
+`/generate` 與修改都先拿 `chat:{chatId}:busy` 鎖（`/save` `/back` 遇到鎖也會擋），避免兩個背景任務互相覆蓋草稿。背景任務寫回前會比對 `startedAt`，期間被 `/cancel` 或 `/movie` 換片就放棄寫入。
 
 ## Redis Key Schema
 
 | Key | 型別 | 說明 |
 |---|---|---|
-| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給影評人 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片 |
+| `chat:{chatId}:session` | JSON | 進行中討論：`{ movieTitleZh, movieTitleEn, imdbID, year, genres[], posterUrl, plot, actors, director, history[{role,text}], startedAt, draft? }`，TTL 48h，history 上限 40 則。`plot`/`actors`/`director` 來自 OMDb，餵給影評人 persona 讓 AI 也能聊訓練資料 cutoff 之後上映的新片。`draft` = `{ digest, blindspots, clash, revisions[], createdAt }`，`/generate` 後才有，`/save` 時轉成 review |
+| `chat:{chatId}:busy` | flag | `/generate`／草稿修改處理中鎖，TTL 120s，背景任務結束時主動刪除 |
 | `reviews:ids` | List | review id 列表（LPUSH，新到舊） |
 | `review:{id}` | JSON | `{ id, movieTitleZh, movieTitleZhOriginal?, note?, movieTitleEn, imdbID\|null, year, genres[], posterUrl\|null, digest(md), stages:{blindspots,clash}, createdAt, wordCount }`，無 TTL。`movieTitleZhOriginal`/`note` 為 Dashboard 編輯功能新增的選填欄位 |
 | `omdb:title:{en}:{year}` / `omdb:{imdbID}` | JSON | OMDb 快取，TTL 30 天 |
@@ -79,12 +84,12 @@ src/                   # Vue 3 前端（Phase 2 Dashboard）
 
 - `redis.js` — Upstash client 單例（`UPSTASH_REDIS_REST_*`，fallback `KV_REST_API_*`）
 - `telegram-api.js` — `tg()` 泛用呼叫；`sendMessage`（Markdown 失敗自動降級純文字、>4096 自動切段）、`sendChatAction`、`sendPhoto`
-- `gemini.js` — `chatReply`（討論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈）
+- `gemini.js` — `chatReply`（討論，thinking 0）、`generateJSON`（responseSchema）、`generateText`（三段鏈與草稿修改）、`aiErrorMessage`（錯誤轉成使用者看得懂的提示）
 - `omdb.js` — `alignAndFetch(中文片名, hint?)`：有 `hint.englishTitle` 跳過 Gemini 直查 OMDb；否則 Gemini JSON 對齊（`hint.year` 輔助消歧）→ OMDb `t=&y=` → 去 `y` 重試 → 快取 → miss fallback
 - `session.js` / `reviews.js` — Redis CRUD
-- `prompts.js` — 影評人 persona + Stage A/B/C prompt 模板
-- `debate.js` — `runDebateEngine`：A 盲點挖掘 → B 論點對撞 → C 風格重塑 → saveReview → 送 digest → 清 session
-- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/cancel` `/list`）、討論回合。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
+- `prompts.js` — 影評人 persona + Stage A/B/C prompt 模板 + `revisePrompt`（與 Stage C 共用 `ARTICLE_RULES`）
+- `debate.js` — `runDebateEngine`：A 盲點挖掘 → B 論點對撞 → C 風格重塑 → 存 `session.draft` → 送草稿；`reviseDraft`：依修改意見重寫草稿；`saveDraft`：saveReview → 清 session
+- `bot.js` — `handleUpdate`：白名單、冪等、指令路由（`/start` `/movie` `/generate` `/save` `/back` `/cancel` `/list`）、討論回合 / 草稿修改分流。被 `api/telegram.js`（webhook）與 `scripts/dev-bot.js`（本機 polling）共用
 
 ## 技術棧
 

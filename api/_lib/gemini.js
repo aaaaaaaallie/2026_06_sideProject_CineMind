@@ -25,6 +25,17 @@ export function isOverloadedError(err) {
   return /\b50[03]\b|UNAVAILABLE/i.test(String(err))
 }
 
+// Gemini 額度/頻率限制錯誤要給使用者看得懂的提示，而不是靜默失敗（見 CHANGELOG）
+export function aiErrorMessage(err) {
+  if (isQuotaError(err)) {
+    return '⚠️ AI 額度暫時用完了（免費層有每日上限），晚點再試一次看看。'
+  }
+  if (isOverloadedError(err)) {
+    return '⚠️ AI 服務忙線中（Google 那邊暫時滿載），過幾分鐘再試一次。'
+  }
+  return '⚠️ AI 暫時出了點問題，稍後再試一次。'
+}
+
 // 依序嘗試 MODELS：額度用完（429）或服務端暫時性錯誤（500/503）才換下一個 model；
 // 其餘錯誤（400 參數錯、403 金鑰錯、404 model 名稱錯等）直接拋出，避免掩蓋真正的 bug
 async function withFallback(call) {

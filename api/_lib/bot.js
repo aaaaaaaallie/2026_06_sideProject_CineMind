@@ -1,10 +1,10 @@
 import { redis } from './redis.js'
 import { sendMessage, sendChatAction, sendPhoto } from './telegram-api.js'
-import { chatReply, isQuotaError, isOverloadedError } from './gemini.js'
+import { chatReply, aiErrorMessage } from './gemini.js'
 import { alignAndFetch } from './omdb.js'
-import { getSession, setSession, clearSession } from './session.js'
+import { getSession, setSession, clearSession, acquireBusy, isBusy } from './session.js'
 import { listReviews } from './reviews.js'
-import { runDebateEngine } from './debate.js'
+import { runDebateEngine, reviseDraft, saveDraft } from './debate.js'
 import { criticSystemPrompt } from './prompts.js'
 
 // webhook（api/telegram.js）與本機 poller（scripts/dev-bot.js）共用的核心入口。
@@ -38,6 +38,8 @@ export async function handleUpdate(update, { waitUntil = p => p } = {}) {
   if (text.startsWith('/start')) return handleStart(chatId)
   if (text.startsWith('/movie')) return handleMovie(chatId, text.replace(/^\/movie\s*/, ''))
   if (text.startsWith('/generate')) return handleGenerate(chatId, waitUntil)
+  if (text.startsWith('/save')) return handleSave(chatId)
+  if (text.startsWith('/back')) return handleBack(chatId)
   if (text.startsWith('/cancel')) return handleCancel(chatId)
   if (text.startsWith('/list')) return handleList(chatId)
 
@@ -50,18 +52,10 @@ export async function handleUpdate(update, { waitUntil = p => p } = {}) {
     return sendMessage(chatId, '目前沒有進行中的電影討論。\n用 /movie <片名> 開始，例如：/movie 寄生上流')
   }
 
-  return handleDebateTurn(chatId, session, text)
-}
+  // 有草稿時，打字一律當成對草稿的修改意見；想回去討論用 /back
+  if (session.draft) return handleRevise(chatId, session, text, waitUntil)
 
-// Gemini 額度/頻率限制錯誤要給使用者看得懂的提示，而不是靜默失敗（見 CHANGELOG）
-function aiErrorMessage(err) {
-  if (isQuotaError(err)) {
-    return '⚠️ AI 額度暫時用完了（免費層有每日上限），晚點再試一次看看。'
-  }
-  if (isOverloadedError(err)) {
-    return '⚠️ AI 服務忙線中（Google 那邊暫時滿載），過幾分鐘再試一次。'
-  }
-  return '⚠️ AI 暫時出了點問題，稍後再試一次。'
+  return handleDebateTurn(chatId, session, text)
 }
 
 function handleStart(chatId) {
@@ -71,7 +65,9 @@ function handleStart(chatId) {
     '/movie <片名> — 開始討論一部電影（中文片名即可）',
     '　查無此片時可補充英文片名/年份：/movie 大濛, Op O, 2023',
     '直接打字 — 與影評人討論',
-    '/generate — 把這場討論煉成一篇影評歸檔',
+    '/generate — 把這場討論煉成一篇影評草稿',
+    '　草稿可直接回覆修改意見，滿意後 /save 歸檔',
+    '/back — 丟掉草稿，回去繼續討論',
     '/list — 最近歸檔的影評',
     '/cancel — 放棄目前討論',
   ].join('\n'))
@@ -158,9 +154,36 @@ async function handleGenerate(chatId, waitUntil) {
   if (session.history.length < 4) {
     return sendMessage(chatId, '素材還太少，生出來的觀點會很空。再跟影評人多過幾招吧。')
   }
-  await sendMessage(chatId, '🧠 正在打造觀點（盲點挖掘 → 論點對撞 → 風格重塑），約需 30 秒…')
+  if (!(await acquireBusy(chatId))) return sendMessage(chatId, BUSY_MSG)
+  await sendMessage(chatId, session.draft
+    ? '🧠 重新打造觀點（會覆蓋目前的草稿），約需 30 秒…'
+    : '🧠 正在打造觀點（盲點挖掘 → 論點對撞 → 風格重塑），約需 30 秒…')
   // Vercel 上交給 waitUntil 背景跑，webhook 先回 200；本機直接 await
   return waitUntil(runDebateEngine(chatId, session))
+}
+
+const BUSY_MSG = '⏳ 上一個請求還在處理，稍等一下再試。'
+
+async function handleRevise(chatId, session, instruction, waitUntil) {
+  if (!(await acquireBusy(chatId))) return sendMessage(chatId, BUSY_MSG)
+  await sendMessage(chatId, '✏️ 照你的意見改寫中…')
+  return waitUntil(reviseDraft(chatId, session, instruction))
+}
+
+async function handleSave(chatId) {
+  const session = await getSession(chatId)
+  if (!session?.draft) return sendMessage(chatId, '目前沒有草稿。聊完後先 /generate 產出草稿，再 /save 歸檔。')
+  if (await isBusy(chatId)) return sendMessage(chatId, BUSY_MSG)
+  return saveDraft(chatId, session)
+}
+
+async function handleBack(chatId) {
+  const session = await getSession(chatId)
+  if (!session?.draft) return sendMessage(chatId, '目前沒有草稿，本來就在討論模式，直接打字就好。')
+  if (await isBusy(chatId)) return sendMessage(chatId, BUSY_MSG)
+  delete session.draft
+  await setSession(chatId, session)
+  return sendMessage(chatId, '已丟掉草稿，回到討論模式。補充完想法後再 /generate。')
 }
 
 async function handleCancel(chatId) {
