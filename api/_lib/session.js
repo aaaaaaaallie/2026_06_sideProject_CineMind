@@ -21,11 +21,11 @@ export function clearSession(chatId) {
 }
 
 // 處理中鎖：/generate 與草稿修改都在背景跑，連打兩次會讓兩個任務互相覆蓋草稿。
-// EX 120 是保險，背景任務正常結束時會主動釋放。
+// EX 300 對齊 vercel.json 的 maxDuration：任務被砍時 finally 跑不到，鎖最多卡到 function 上限就自動解開。
 const busyKey = chatId => `chat:${chatId}:busy`
 
 export async function acquireBusy(chatId) {
-  return (await redis().set(busyKey(chatId), 1, { nx: true, ex: 120 })) !== null
+  return (await redis().set(busyKey(chatId), 1, { nx: true, ex: 300 })) !== null
 }
 
 export async function isBusy(chatId) {

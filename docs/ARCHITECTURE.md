@@ -8,7 +8,7 @@
 [Telegram Bot]（文字輸入）
      │ Webhook（X-Telegram-Bot-Api-Secret-Token 驗證）
      ▼
-[api/telegram.js] Vercel Function（maxDuration 60）
+[api/telegram.js] Vercel Function（maxDuration 300）
      ├─► api/_lib/gemini.js   — Gemini 3.5 Flash（@google/genai）
      ├─► api/_lib/omdb.js     — 中文片名 → Gemini 對齊英文片名 → OMDb 海報/年份/類型
      └─► api/_lib/redis.js    — Upstash Redis（session、快取、reviews）
